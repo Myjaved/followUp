@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
 import EmployeeSidebar from '../components/EmployeeSidebar';
 import Image from 'next/image';
+import NavSideEmp from '../components/NavSideEmp';
 
 
 const formatDateString = (dateString) => {
@@ -139,10 +140,10 @@ const ReceivedTaskList = () => {
 
   return (
     <>
-      <Navbar />
-      {/* <Sidebar /> */}
-      <EmployeeSidebar />
-      <div className="container mx-auto px-4 m-16 pl-60 mt-20">
+      {/* <Navbar /> */}
+      {/* <EmployeeSidebar /> */}
+      <NavSideEmp />
+      <div className="m-5 pl-5 md:pl-72 mt-20">
         <h2 className="text-2xl font-semibold mb-4 m-3 text-orange-500">Pending Task List</h2>
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
@@ -153,64 +154,66 @@ const ReceivedTaskList = () => {
             />
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className='bg-orange-500 text-white'>
-              <tr>
-                <th className="px-4 py-2 text-center text-xs font-bold uppercase tracking-wider">
-                  Sr. No.
-                </th>
-                <th className="px-4 py-2 pl-10 text-left text-xs font-bold  uppercase tracking-wider">
-                  Title
-                </th>
-                {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className='bg-orange-500 text-white'>
+                <tr>
+                  <th className="px-4 py-2 text-center text-xs font-bold uppercase tracking-wider">
+                    Sr. No.
+                  </th>
+                  <th className="px-4 py-2 pl-10 text-left text-xs font-bold  uppercase tracking-wider">
+                    Title
+                  </th>
+                  {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th> */}
-                <th className="px-4 py-2 pl-10 text-left text-xs font-bold  uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-bold  uppercase tracking-wider">
-                  Deadline Date
-                </th>
-                <th className="px-4 py-2 pl-5 text-left text-xs font-bold  uppercase tracking-wider">
-                  AssignedBy
-                </th>
-                <th className="px-20 py-2 text-left text-xs font-bold  uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200 border border-gray-200">
-              {tasks.map((task) => (
-                <tr key={task._id}>
-                  <td className="px-6 py-1 whitespace-nowrap text-center border border-orange-400">{serialNumber++}</td>
-                  <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.title}</td>
-                  <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.startDate}</td>
-                  <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.deadlineDate}</td>
-                  <td className="px-6 py-1 whitespace-nowrap border border-orange-400 text-center">{task.assignedBy?.name ? task.assignedBy?.name : <strong>SELF</strong>}</td>
-                  <td className="px-5 py-1 whitespace-nowrap border border-orange-400">
+                  <th className="px-4 py-2 pl-10 text-left text-xs font-bold  uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-bold  uppercase tracking-wider">
+                    Deadline Date
+                  </th>
+                  <th className="px-4 py-2 pl-5 text-left text-xs font-bold  uppercase tracking-wider">
+                    AssignedBy
+                  </th>
+                  <th className="px-20 py-2 text-left text-xs font-bold  uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200 border border-gray-200">
+                {tasks.map((task) => (
+                  <tr key={task._id}>
+                    <td className="px-6 py-1 whitespace-nowrap text-center border border-orange-400">{serialNumber++}</td>
+                    <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.title}</td>
+                    <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.startDate}</td>
+                    <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.deadlineDate}</td>
+                    <td className="px-6 py-1 whitespace-nowrap border border-orange-400 text-center">{task.assignedBy?.name ? task.assignedBy?.name : <strong>SELF</strong>}</td>
+                    <td className="px-5 py-1 whitespace-nowrap border border-orange-400">
 
-                    {/* <button
+                      {/* <button
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-sm"
                     onClick={() => handleViewClick(task._id)}
                   >
                     View
                   </button> */}
-                    <FontAwesomeIcon
-                      icon={faEye}
-                      className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-lg"
-                      onClick={() => handleViewClick(task._id)}
-                    />
-                    <button
-                      className="bg-green-400 hover:bg-green-700 text-black font-bold py-2 px-4 rounded-xl mx-3 text-sm"
-                      onClick={() => handleMarkAsCompleteClick(task._id)}
-                    >
-                      Mark as Complete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <FontAwesomeIcon
+                        icon={faEye}
+                        className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-lg"
+                        onClick={() => handleViewClick(task._id)}
+                      />
+                      <button
+                        className="bg-green-400 hover:bg-green-700 text-black font-bold py-2 px-4 rounded-xl mx-3 text-sm"
+                        onClick={() => handleMarkAsCompleteClick(task._id)}
+                      >
+                        Mark as Complete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         {/* View Task Modal */}
         {isViewModalOpen && (

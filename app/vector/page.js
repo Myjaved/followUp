@@ -5,6 +5,7 @@ import { Chart } from "chart.js";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import AdminSidebar from "../components/AdminSidebar";
+import NavSide from "../components/NavSide";
 
 const Vector = () => {
   const [chartData, setChartData] = useState([]);
@@ -21,7 +22,7 @@ const Vector = () => {
 
         if (response.data) {
           const taskCounts = response.data;
-          const chartData = [taskCounts.totalEmployeeTasks, taskCounts.completedTasks, taskCounts.pendingTasks, taskCounts.overdueTasks, taskCounts.todayAddedTasks];
+          const chartData = [taskCounts.totalEmployeeTasks, taskCounts.completedTasks, taskCounts.pendingTasks, taskCounts.overdueTasks, taskCounts.todayAddedTasks, taskCounts.sendTasks];
 
           setChartData(chartData);
         }
@@ -41,13 +42,12 @@ const Vector = () => {
         datasets: [
           {
             data: chartData,
-            borderColor: ["rgb(75, 192, 192)", "rgb(98, 194, 58)", "blue", "red", "rgb(255, 159, 64)","transparent"], // Orange color for Pending Tasks
-            backgroundColor: ["rgb(75, 192, 192)", "rgb(98, 194, 58)", "blue", "red", "rgb(255, 159, 64)","transparent"], // Orange color for Pending Tasks
-
+            borderColor: ["rgb(128, 0, 128)", "rgb(0, 71, 171)", "rgb(210, 4, 45)", "rgb(34, 139, 34)", "rgb(205, 127, 50)", "rgb(255, 215, 0)"],
+            backgroundColor: ["rgb(128, 0, 128)", "rgb(0, 71, 171)", "rgb(210, 4, 45)", "rgb(34, 139, 34)", "rgb(205, 127, 50)", "rgb(255, 215, 0)" ],
             borderWidth: 2,
           },
         ],
-        labels: ["Total Employee Tasks", "Completed Tasks", "Pending Tasks", "Overdue Tasks", "Today Added Tasks"],
+        labels: ["Total Employee Tasks", "Completed Tasks", "Pending Tasks", "Overdue Tasks", "Today Added Tasks","Send Tasks"],
       },
       options: {
         cutoutPercentage: 50, // Specify the percentage of the hole in the center of the doughnut chart
@@ -85,8 +85,9 @@ const Vector = () => {
 
   return (
     <>
-      <Navbar />
-      <AdminSidebar />
+      {/* <Navbar /> */}
+      {/* <AdminSidebar /> */}
+      <NavSide/>
       <div className="text-right pl-32 -mt-5">
         <h1 className="w-[200px] mx-96 text-2xl font-bold capitalize mt-28 text-right text-orange-700"> Dashboard</h1>
       </div>

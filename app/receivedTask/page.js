@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
 import EmployeeSidebar from '../components/EmployeeSidebar';
 import Image from 'next/image';
+import NavSideEmp from '../components/NavSideEmp';
 
 
 const formatDateString = (dateString) => {
@@ -139,12 +140,13 @@ const ReceivedTaskList = () => {
     }
   };
 
+
   return (
     <>
-      <Navbar />
-      {/* <Sidebar /> */}
-      <EmployeeSidebar />
-      <div className="container mx-auto px-4 m-16 pl-60 mt-20">
+      {/* <Navbar /> */}
+      {/* <EmployeeSidebar /> */}
+      <NavSideEmp />
+      <div className="m-5 pl-5 md:pl-72 mt-20">
         <h2 className="text-2xl font-bold mb-4 m-6 text-orange-500">All Task List</h2>
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
@@ -155,66 +157,67 @@ const ReceivedTaskList = () => {
             />
           </div>
         ) : (
-
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Sr. No.
-                </th>
-                <th className="px-4 pl-14 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-4 pl-3 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-4 pl-10 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Deadline Date
-                </th>
-                <th className="py-2 pr-10 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {tasks.map((task) => {
-                const { colorClass, statusText } = getStatusColorAndText(task);
-                return (
-                  // <tr key={task._id} className={`hover:bg-gray-100 ${colorClass}`}>
-                  <tr key={task._id}>
-                    <td className="px-6 py-2 whitespace-nowrap text-center">
-                      {serialNumber++}
-                    </td>
-                    <td className="px-6 py-2 whitespace-nowrap">{task.title}</td>
-                    {/* <td className={`px-6 py-2 whitespace-nowrap font-bold`}>{statusText}</td> */}
-                    <td className=" px-4 py-2 text-center">
-                      <span className={` px-4 py-1 text-left ${colorClass}`}>
-                        {statusText}
-                      </span>
-                    </td>
-                    <td className="px-6 py-2 whitespace-nowrap">{formatDateDisplay(task.startDate)}</td>
-                    <td className="px-6 py-2 whitespace-nowrap">{formatDateDisplay(task.deadlineDate)}</td>
-                    <td className="px-5 py-2 whitespace-nowrap">
-                      <FontAwesomeIcon
-                        icon={faEye}
-                        className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-lg"
-                        onClick={() => handleViewClick(task._id)}
-                      />
-                      {/* <button
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Sr. No.
+                  </th>
+                  <th className="px-4 pl-14 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-4 pl-3 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 pl-10 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Deadline Date
+                  </th>
+                  <th className="py-2 pr-10 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {tasks.map((task) => {
+                  const { colorClass, statusText } = getStatusColorAndText(task);
+                  return (
+                    // <tr key={task._id} className={`hover:bg-gray-100 ${colorClass}`}>
+                    <tr key={task._id}>
+                      <td className="px-6 py-2 whitespace-nowrap text-center">
+                        {serialNumber++}
+                      </td>
+                      <td className="px-6 py-2 whitespace-nowrap">{task.title}</td>
+                      {/* <td className={`px-6 py-2 whitespace-nowrap font-bold`}>{statusText}</td> */}
+                      <td className=" px-4 py-2 text-center">
+                        <span className={` px-4 py-1 text-left ${colorClass}`}>
+                          {statusText}
+                        </span>
+                      </td>
+                      <td className="px-6 py-2 whitespace-nowrap">{formatDateDisplay(task.startDate)}</td>
+                      <td className="px-6 py-2 whitespace-nowrap">{formatDateDisplay(task.deadlineDate)}</td>
+                      <td className="px-5 py-2 whitespace-nowrap">
+                        <FontAwesomeIcon
+                          icon={faEye}
+                          className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-lg"
+                          onClick={() => handleViewClick(task._id)}
+                        />
+                        {/* <button
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-sm"
                         onClick={() => handleViewClick(task._id)}
                       >
                         View
                       </button> */}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
         {/* View Task Modal */}
         {isViewModalOpen && (

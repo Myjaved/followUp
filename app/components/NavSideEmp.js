@@ -8,14 +8,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
-const NavSide = () => {
+const NavSideEmp = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isTasksOpen, setTasksOpen] = useState(false);
-    const [isEmployeeOpen, setEmployeeOpen] = useState(false);
     const [isLeadOpen, setLeadOpen] = useState(false); // Add this state
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [profilePictureURL, setProfilePictureURL] = useState(null);
-    const [role, setRole] = useState('Admin');
     const [newTasks, setNewTasks] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -49,9 +47,6 @@ const NavSide = () => {
         setTasksOpen(!isTasksOpen);
     };
 
-    const toggleEmployee = () => {
-        setEmployeeOpen(!isEmployeeOpen);
-    };
 
     const [changePasswordErrors, setChangePasswordErrors] = useState({});
 
@@ -273,16 +268,6 @@ const NavSide = () => {
         }
     }, []);
 
-
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const subUsername = localStorage.getItem('subUsername');
-            const newRole = subUsername ? 'Employee' : 'Admin';
-            setRole(newRole);
-        }
-    }, []);
-
     useEffect(() => {
         const closeDropdown = (event) => {
             if (isDropdownOpen) {
@@ -384,16 +369,17 @@ const NavSide = () => {
 
                             <Link href="https://flowbite.com" className="flex ml-2 md:mr-24">
                                 {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
-                                <span className="self-center text-base md:text-2xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-red-800">Admin</span>
+                                <span className="self-center text-base md:text-2xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-red-800">Employee</span>
                             </Link>
 
                         </div>
                         <div className="flex items-center">
+                            
                             <button
                                 onClick={toggleLeadDropdown}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none mr-5"
                             >
-                                <FontAwesomeIcon icon={faEnvelope} className="text-xl fa-lg justify-between text-blue-500" />
+                                <FontAwesomeIcon icon={faEnvelope} className="text-xl fa-lg justify-between text-green-700" />
                                 {envelopeNotificationCount > 0 && (
                                     <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs text-center absolute m-4 mt-0 -mr-2">
                                         {envelopeNotificationCount}
@@ -435,7 +421,7 @@ const NavSide = () => {
                                 onClick={handleNotificationClick}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none"
                             >
-                                <FontAwesomeIcon icon={faBell} className="text-xl fa-lg justify-between mr-1 text-yellow-600" />
+                                <FontAwesomeIcon icon={faBell} className="text-xl fa-lg justify-between mr-1 text-red-800" />
                                 {notificationCount > 0 && (
                                     <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs shadow-lg text-center absolute top-0 right-0 -mt-1 -mr-1">
                                         {notificationCount}
@@ -762,7 +748,7 @@ const NavSide = () => {
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>
-                            <Link href="/adminDashboard" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2">
+                            <Link href="/vectorEmp" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2">
                                 <FontAwesomeIcon icon={faTableCellsLarge} size='xl'
                                     style={{ color: "#3ca8be", marginLeft: '5px' }} />
                                 <span className="ml-3">Dashboard</span>
@@ -784,49 +770,47 @@ const NavSide = () => {
                             {isTasksOpen && (
                                 <ul className="ml-6 space-y-2 font-medium">
                                     <li>
-                                        <Link href="/taskList" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                        <Link href="/receivedTask" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faTasks} size='xl'
                                                 style={{ color: "purple", marginLeft: '15px' }} />
-                                            <span className="ml-3 pl-1">All Tasks</span>
+                                            <span className="ml-3 pl-1">Received Tasks</span>
                                         </Link>
                                     </li>
                                     <li>
                                     </li>
 
                                     <li>
-                                        <Link href="/completedTask" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                        <Link href="/completedByEmp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faSquareCheck} size='xl'
                                                 style={{ color: "#037705", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-1">Completed Tasks</span>
                                         </Link>
                                     </li>
                                     <li>
-                                        <Link href="/pending" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                        <Link href="/pendingEmp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faHourglassStart} size='xl'
                                                 style={{ color: "#2a5fbb", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-2">Pending Tasks</span>
                                         </Link>
                                     </li>
                                     <li>
-                                        <Link href="/overdue"
+                                        <Link href="/overdueByEmployee"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faExclamationCircle} size='xl'
                                                 style={{ color: "#FF5733", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-1">Overdue Tasks</span>
-
-
                                         </Link>
                                     </li>
-                                    <li>
+                                    {/* <li>
                                         <Link href="/sendTask"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faPaperPlane} size='xl'
                                                 style={{ color: "red", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-1">Tasks Send</span>
                                         </Link>
-                                    </li>
+                                    </li> */}
                                     <li>
-                                        <Link href="/taskForm" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                        <Link href="/taskFormInternal" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faPenToSquare} size='xl' style={{ color: "#de4f35", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-1">Add Task</span>
                                         </Link>
@@ -835,39 +819,7 @@ const NavSide = () => {
                             )}
                         </li>
 
-                        <li>
-                            <button onClick={toggleEmployee} className="flex items-center w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2" >
-
-                                <FontAwesomeIcon icon={faUser} size='xl'
-                                    style={{ color: "#2d62be", }} />
-                                <span className="ml-3 pl-2">Employee</span>
-                                <FontAwesomeIcon
-                                    icon={faAngleDown}
-                                    className={`w-5 h-5 ml-auto ${isEmployeeOpen ? 'rotate-0' : 'rotate-180'}`}
-                                />
-
-                            </button>
-
-                            {isEmployeeOpen && (
-                                <ul className="ml-6 space-y-2 font-medium">
-                                    <li>
-                                        <Link href="/subList" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group pl-3">
-                                            <FontAwesomeIcon icon={faClipboardList} size='xl' style={{ color: "#f19513", marginLeft: '15px' }} />
-                                            <span className="ml-3 pl-2">Employee List</span>
-                                        </Link>
-
-                                    </li>
-                                    <li>
-                                        <Link href="/subemp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover-bg-gray-700 group pl-2">
-                                            <FontAwesomeIcon icon={faUserPlus} size='xl'
-                                                style={{ color: "#493927", marginLeft: '15px' }} />
-                                            <span className="ml-3">Add Employee</span>
-                                        </Link>
-                                    </li>
-                                </ul>
-                            )}
-                        </li>
-
+                        
                         <li>
                             <button
                                 onClick={toggleLead}
@@ -885,14 +837,14 @@ const NavSide = () => {
                             {isLeadOpen && (
                                 <ul className="ml-6 space-y-2 font-medium">
                                     <li>
-                                        <Link href="/leadForm" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                        <Link href="/leadFormEmp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faSquarePlus} size='xl'
                                                 style={{ color: "#f23a3a", marginLeft: '15px' }} />
                                             <span className="ml-3">Create Lead</span>
                                         </Link>
                                     </li>
                                     <li>
-                                        <Link href="/leadList" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                        <Link href="/leadListEmp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faBarsStaggered} size='xl'
                                                 style={{ color: "#f29d3a", marginLeft: '15px' }} />
                                             <span className="ml-3">Lead List</span>
@@ -909,4 +861,4 @@ const NavSide = () => {
     )
 }
 
-export default NavSide
+export default NavSideEmp

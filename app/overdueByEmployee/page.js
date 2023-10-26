@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import EmployeeSidebar from '../components/EmployeeSidebar';
 import Image from 'next/image';
+import NavSideEmp from '../components/NavSideEmp';
 
 
 const formatDate = (dateString) => {
@@ -94,10 +95,10 @@ const OverdueByEmployee = () => {
 
   return (
     <>
-      <Navbar />
-      {/* <Sidebar /> */}
-      <EmployeeSidebar />
-      <div className="container mx-auto m-12 pl-72 mt-20">
+      {/* <Navbar />
+      <EmployeeSidebar /> */}
+      <NavSideEmp/>
+      <div className="m-5 pl-5 md:pl-72 mt-20">
         <h1 className="text-2xl font-bold mb-4 text-orange-800">Overdue Tasks</h1>
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">

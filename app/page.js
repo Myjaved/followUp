@@ -7,6 +7,7 @@ import Dashboard from './dashboard/page';
 import AdminDashboard from './adminDashboard/page';
 import LoginForm from './login/page';
 import Vector from './vector/page';
+import VectorEmp from './vectorEmp/page';
 
 const Home = () => {
   const [userRole, setUserRole] = useState(null);
@@ -48,10 +49,11 @@ const Home = () => {
       {/* Render the appropriate dashboard based on user role when not loading */}
       {!isLoading && (
         userRole === 'admin' ? (
-          <AdminDashboard />
-          // <Vector/>
+          // <AdminDashboard />
+          <Vector/>
         ) : userRole === 'sub-employee' ? (
-          <Dashboard />
+          // <Dashboard />
+          <VectorEmp/>
         ) : (
           <LoginForm/> // Render a default dashboard component for other roles or unauthenticated users
         )

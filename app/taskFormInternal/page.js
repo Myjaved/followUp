@@ -7,6 +7,7 @@ import jwt_decode from 'jwt-decode';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import EmployeeSidebar from '../components/EmployeeSidebar';
+import NavSideEmp from '../components/NavSideEmp';
 
 // const decodedToken = jwt_decode(localStorage.getItem('authToken'));
 // const decodedToken = typeof window !== 'undefined' ? window.localStorage.getItem('authToken') : null;
@@ -122,9 +123,10 @@ const TaskFormInternal = () => {
 
     return (
         <>
-            <Navbar />
+            {/* <Navbar /> */}
             {/* <Sidebar /> */}
-            <EmployeeSidebar/>
+            {/* <EmployeeSidebar/> */}
+            <NavSideEmp/>
 
             <div className="w-full flex justify-center items-center m-10 pl-42 mt-8 bg-yellow-50 min-h-screen">
                 <div className="w-3/5 max-w-2xl">

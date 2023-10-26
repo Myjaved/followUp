@@ -5,6 +5,7 @@ import axios from 'axios';
 import Navbar from '../components/Navbar';
 import AdminSidebar from '../components/AdminSidebar';
 import EmployeeSidebar from '../components/EmployeeSidebar';
+import NavSideEmp from '../components/NavSideEmp';
 
 
 const LeadFormEmp = () => {
@@ -84,9 +85,10 @@ const LeadFormEmp = () => {
 
     return (
         <>
-            <Navbar />
+            {/* <Navbar /> */}
             {/* <Sidebar /> */}
-            <EmployeeSidebar/>
+            {/* <EmployeeSidebar/> */}
+            <NavSideEmp/>
             <div className="container mx-auto flex justify-center items-center mt-28 mb-15 pl-64">
                 <div className="w-1/2 ">
                     <div className="bg-white shadow-md rounded px-8 py-8 mb-4 border border-gray-800">

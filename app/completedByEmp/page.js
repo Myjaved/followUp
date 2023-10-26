@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import EmployeeSidebar from '../components/EmployeeSidebar';
 import Image from 'next/image';
+import NavSideEmp from '../components/NavSideEmp';
 
 
 const CompletedTaskList = () => {
@@ -72,10 +73,10 @@ const CompletedTaskList = () => {
 
   return (
     <>
-      <Navbar />
-      {/* <Sidebar /> */}
-      <EmployeeSidebar />
-      <div className="container mx-auto mt-20 m-10 pl-64">
+      {/* <Navbar /> */}
+      {/* <EmployeeSidebar /> */}
+      <NavSideEmp />
+      <div className="m-5 pl-5 md:pl-72 mt-20">
         <h1 className="text-2xl font-semibold mb-4 text-orange-500">Completed Task List</h1>
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
@@ -90,46 +91,48 @@ const CompletedTaskList = () => {
             {completedTasks.length === 0 ? (
               <p className="text-gray-600">No completed tasks found.</p>
             ) : (
-              <table className="min-w-full table-auto">
-                <thead className='bg-green-500 text-white'>
-                  <tr>
-                    <th className="px-4 py-2">Sr. No.</th>
-                    <th className="px-4 py-2">Task</th>
-                    <th className="px-4 py-2">Description</th>
-                    <th className="px-4 py-2">Assigned To</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {completedTasks.map((task, index) => (
-                    <tr key={task._id}>
-                      <td className="border border-green-500 px-4 py-2 text-center">{index + 1}</td>
-                      <td className="border border-green-500  px-4 py-2">
-                        <div>
-                          <h2 className="text-base border-green-500  font-medium text-blue-800 text-left">{task.title}</h2>
-                        </div>
-                      </td>
-                      <td className="border px-4 py-2 text-left border-green-500 ">{task.description}</td>
-                      <td className="border px-4 py-2 text-center border-green-500 ">{task.assignTo}</td>
-                      <td className="border px-4 py-2 text-center border-green-500 ">
-                        <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-sm">
-                          Completed
-                        </span>
-                      </td>
-                      <td className="border px-4 py-2 text-center border-green-500 ">
-                        <div className="flex items-center mx-5">
-                          <FontAwesomeIcon
-                            icon={faEye}
-                            className="text-blue-500 hover:underline cursor-pointer text-lg"
-                            onClick={() => openViewModal(task)} // Open view modal when clicked
-                          />
-                        </div>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full table-auto">
+                  <thead className='bg-green-500 text-white'>
+                    <tr>
+                      <th className="px-4 py-2">Sr. No.</th>
+                      <th className="px-4 py-2">Task</th>
+                      <th className="px-4 py-2">Description</th>
+                      <th className="px-4 py-2">Assigned To</th>
+                      <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2 text-left">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {completedTasks.map((task, index) => (
+                      <tr key={task._id}>
+                        <td className="border border-green-500 px-4 py-2 text-center">{index + 1}</td>
+                        <td className="border border-green-500  px-4 py-2">
+                          <div>
+                            <h2 className="text-base border-green-500  font-medium text-blue-800 text-left">{task.title}</h2>
+                          </div>
+                        </td>
+                        <td className="border px-4 py-2 text-left border-green-500 ">{task.description}</td>
+                        <td className="border px-4 py-2 text-center border-green-500 ">{task.assignTo}</td>
+                        <td className="border px-4 py-2 text-center border-green-500 ">
+                          <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-sm">
+                            Completed
+                          </span>
+                        </td>
+                        <td className="border px-4 py-2 text-center border-green-500 ">
+                          <div className="flex items-center mx-5">
+                            <FontAwesomeIcon
+                              icon={faEye}
+                              className="text-blue-500 hover:underline cursor-pointer text-lg"
+                              onClick={() => openViewModal(task)} // Open view modal when clicked
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}

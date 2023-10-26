@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import AdminSidebar from '../components/AdminSidebar';
 import EmployeeSidebar from '../components/EmployeeSidebar';
+import NavSideEmp from '../components/NavSideEmp';
 
 const LeadListEmp = () => {
   const [leads, setLeads] = useState([]);
@@ -106,9 +107,7 @@ const LeadListEmp = () => {
 
   return (
     <>
-    <Navbar/>
-    {/* <Sidebar/> */}
-    <EmployeeSidebar/>
+    <NavSideEmp/>
       <div className='pl-72 mt-20 m-10'>
         <h2 className="text-2xl font-bold mb-4 text-indigo-500">Lead List</h2>
         <div className="overflow-x-auto">
