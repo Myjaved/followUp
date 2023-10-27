@@ -762,7 +762,7 @@ const NavSide = () => {
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>
-                            <Link href="/adminDashboard" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2">
+                            <Link href="/vector" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2">
                                 <FontAwesomeIcon icon={faTableCellsLarge} size='xl'
                                     style={{ color: "#3ca8be", marginLeft: '5px' }} />
                                 <span className="ml-3">Dashboard</span>

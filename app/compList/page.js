@@ -10,6 +10,7 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import SuperSidebar from '../components/SuperSidebar';
 import SuperNavbar from '../components/SuperNavbar';
+import NavSideSuper from '../components/NavSideSuper';
 
 
 
@@ -97,14 +98,16 @@ const CompanyList = () => {
     return (
         <>
 
-            <SuperSidebar className="hidden md:block" /> {/* Hide on mobile */}
-            <SuperNavbar className="hidden md:block" /> {/* Hide on mobile */}
-
+            {/* <SuperSidebar className="hidden md:block" />  */}
+            {/* <SuperNavbar className="hidden md:block" />  */}
             {/* <SuperSidebar />
-            <SuperNavbar /> */}
+<SuperNavbar /> */}
+
+    <NavSideSuper/>
+
             <div className='m-2 md:mt-20 md:pl-28 pl-4'>
-                <div className="container mx-auto">
-                    <h2 className="text-2xl font-bold text-center align-middle mb-3 text-orange-700" style={{marginTop:"120px"}} >List of Companies</h2>
+                <div className="container mx-auto -mt-10">
+                    <h2 className="text-2xl font-bold text-center align-middle mb-3 text-orange-700" style={{ marginTop: "120px" }} >List of Companies</h2>
                     <div className="mb-4 flex justify-center">
                         <input
                             type="text"
@@ -115,7 +118,7 @@ const CompanyList = () => {
                         />
 
                     </div>
-                        
+
                     <div className="relative mb-4 md:mb-20">
                         <button
                             className="bg-orange-500 text-white font-bold py-2 px-7 rounded-lg md:absolute top-2 right-2" // Positioning
@@ -167,7 +170,7 @@ const CompanyList = () => {
                             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                         >
                             <div
-                                className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+                                className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <button
@@ -177,7 +180,7 @@ const CompanyList = () => {
                                 >
                                     {/* Close button icon */}
                                 </button>
-                                <div className="p-6 text-center">
+                                <div className="p-5 text-center">
                                     <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Edit Company</h3>
                                     <div className="mb-4">
                                         <label className="block text-gray-800 dark:text-gray-200 text-sm font-medium mb-2">
@@ -192,14 +195,14 @@ const CompanyList = () => {
                                     </div>
                                     <button
                                         type="button"
-                                        className="px-4 py-2 text-white bg-green-500 hover:bg-green-600 rounded-md mr-4 transition duration-300 ease-in-out"
+                                        className="px-6 py-2 text-white bg-green-500 hover:bg-green-600 rounded-md mr-5 transition duration-300 ease-in-out"
                                         onClick={editCompany}
                                     >
                                         Save
                                     </button>
                                     <button
                                         type="button"
-                                        className="px-4 py-2 text-white bg-green-700 hover:bg-green-600 rounded-md mr-4 transition duration-300 ease-in-out"
+                                        className="px-4 py-2 text-white bg-green-700 hover:bg-green-600 rounded-md transition duration-300 ease-in-out"
                                         onClick={closeModal}
                                     >
                                         Cancel
@@ -216,7 +219,7 @@ const CompanyList = () => {
                             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                         >
                             <div
-                                className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+                                className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg"
                                 onClick={closeModal}
                             >
                                 <button
@@ -226,11 +229,11 @@ const CompanyList = () => {
                                 >
                                     {/* Close button icon */}
                                 </button>
-                                <div className="p-6 text-center">
+                                <div className="p-5 text-center">
                                     <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                     </svg>
-                                    <h3 className="mb-5 text-lg font-normal text-gray-800 dark:text-gray-400">Are you sure you want to delete this Company?</h3>
+                                    <h3 className="mb-5 text-lg font-normal text-gray-800 dark:text-gray-400">Delete this Company?</h3>
                                     <button
                                         type="button"
                                         className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2"

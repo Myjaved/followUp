@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import SuperSidebar from '../components/SuperSidebar';
 import SuperNavbar from '../components/SuperNavbar';
+import NavSideSuper from '../components/NavSideSuper';
 
 const initialFormData = {
     name: '',
@@ -74,10 +75,11 @@ const EmployeeRegistration = () => {
 
     return (
         <>
-        <SuperNavbar/>
+        {/* <SuperNavbar/> */}
         {/* <Navbar/> */}
         {/* <Sidebar/> */}
-        <SuperSidebar/>
+        {/* <SuperSidebar/> */}
+        <NavSideSuper/>
             <div className="mx-auto max-w-md p-6 bg-white rounded-lg shadow-md mt-20 border border-gray-300">
                 <h2 className="text-2xl font-semibold text-center text-orange-500">Admin Registration</h2>
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">

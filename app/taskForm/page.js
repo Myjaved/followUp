@@ -1,15 +1,217 @@
+// 'use client'
+
+// import React, { useState, useEffect } from 'react';
+// import axios from 'axios';
+// import { useRouter } from 'next/navigation';
+// import jwt_decode from 'jwt-decode';
+// import NavSide from '../components/NavSide';
+
+
+// const decodedToken = jwt_decode(localStorage.getItem('authToken'));
+
+
+// const getCurrentTimeIn12HourFormat = () => {
+//   const now = new Date();
+//   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+// };
+
+// const TaskForm = () => {
+//   const router = useRouter();
+//   const [decodedToken, setDecodedToken] = useState(null);
+
+
+//   const [formData, setFormData] = useState({
+//     title: '',
+//     description: '',
+//     startDate: new Date().toISOString().split('T')[0],
+//     deadlineDate: '',
+//     assignTo: '',
+//     picture: null,
+//     audio: null,
+//     assignedBy: decodedToken?.employeeId,
+//   });
+
+//   const [errors, setErrors] = useState([]);
+//   const [successMessage, setSuccessMessage] = useState('');
+//   const [subemployees, setSubemployees] = useState([]);
+//   const [currentStartTime, setCurrentStartTime] = useState(getCurrentTimeIn12HourFormat());
+//   const [currentEndTime, setCurrentEndTime] = useState(getCurrentTimeIn12HourFormat());
+
+//   // useEffect(() => {
+//   //   // Check if localStorage is available (only in the browser)
+//   //   if (typeof window !== 'undefined' && window.localStorage) {
+//   //     const authToken = localStorage.getItem('authToken');
+//   //     if (authToken) {
+//   //       const decoded = jwt_decode(authToken);
+//   //       setDecodedToken(decoded);
+//   //       if (decoded && decoded.employeeId) {
+//   //         setFormData({
+//   //           ...formData,
+//   //           assignedBy: decoded.employeeId,
+//   //         });
+//   //       }
+//   //     }
+//   //   }
+//   // }, []);
+
+//   useEffect(() => {
+//     axios
+//       .get('http://localhost:5000/api/employee/subemployees/list', {
+//         headers: {
+//           Authorization: localStorage.getItem('authToken'),
+//         },
+//       })
+//       .then((response) => {
+//         const subemployeeList = response.data.map((subemployee) => ({
+//           id: subemployee._id,
+//           name: `${subemployee.name} (Employee)`, // Include type (Employee)
+//           phoneNumber: subemployee.phoneNumber,
+//           type: 'Employee', // Indicate type in the data
+//         }));
+
+//         // Also add the Admin as an option
+//         subemployeeList.push({
+//           id: decodedToken.employeeId, // Use the Admin's ID
+//           name: `${decodedToken.name} (Admin)`, // Include type (Admin)
+//           phoneNumber: decodedToken.phoneNumber,
+//           type: 'Admin', // Indicate type in the data
+//         });
+
+//         console.log("subemployeeList", subemployeeList);
+//         setSubemployees(subemployeeList);
+//       })
+//       .catch((error) => {
+//         console.error('Error fetching subemployees:', error);
+//       });
+//     // axios
+//     //   .get('http://localhost:5000/api/employee/subemployees/list', {
+//     //     headers: {
+//     //       Authorization: localStorage.getItem('authToken'),
+//     //     },
+//     //   })
+//     //   .then((response) => {
+//     //     const subemployeeList = response.data.map((subemployee) => ({
+//     //       id: subemployee._id,
+//     //       name: subemployee.name,
+//     //       phoneNumber:subemployee.phoneNumber
+//     //     }));
+
+//     //     console.log("subemployeeList",subemployeeList)
+//     //     setSubemployees(subemployeeList);
+//     //   })
+//     //   .catch((error) => {
+//     //     console.error('Error fetching subemployees:', error);
+//     //   });
+
+//     // Set current start time when the component mounts
+//     setCurrentStartTime(getCurrentTimeIn12HourFormat());
+
+//     // Set current end time when the component mounts
+//     setCurrentEndTime(getCurrentTimeIn12HourFormat());
+//   }, []);
+
+//   const handleInputChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData({
+//       ...formData,
+//       [name]: value,
+//     });
+//   };
+
+//   const handleFileChange = (e) => {
+//     const { name, files } = e.target;
+//     setFormData({
+//       ...formData,
+//       [name]: files[0],
+//     });
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     const selectedSubemployee = subemployees.find((subemployee) => subemployee.id === formData.assignTo);
+
+//     console.log(selectedSubemployee)
+//     if (!selectedSubemployee) {
+//       // Handle the case where no subemployee is selected
+//       return;
+//     }
+
+//     const phoneNumber = selectedSubemployee.phoneNumber;
+//     console.log(phoneNumber)
+
+//     const form = new FormData();
+//     form.append('title', formData.title);
+//     form.append('description', formData.description);
+//     form.append('startDate', formData.startDate);
+//     form.append('startTime', currentStartTime);
+//     form.append('deadlineDate', formData.deadlineDate);
+//     form.append('endTime', currentEndTime);
+//     form.append('assignTo', formData.assignTo);
+//     form.append('phoneNumber', phoneNumber); // Add phone number to the form
+//     form.append('picture', formData.picture);
+//     form.append('audio', formData.audio);
+//     form.append('assignedBy', formData.assignedBy);
+
+//     try {
+//       const response = await axios.post('http://localhost:5000/api/task/create', form, {
+//         headers: {
+//           Authorization: localStorage.getItem('authToken'),
+//           'Content-Type': 'multipart/form-data',
+//         },
+//       });
+
+//       if (response.status === 201) {
+//         console.log('Task created Successfully');
+//         setSuccessMessage(response.data.message);
+//         setErrors([]);
+
+
+//         const notificationResponse = await axios.post('http://localhost:5000/api/notification/create', {
+//           recipientId: formData.assignTo, // Add recipientId to the notification
+//           taskId: response.data.taskId, // Pass the task ID here
+//           message: 'A new task has been assigned to you !', // Customize the message as needed
+//           title: formData.title,
+//           description: formData.description,
+//           startDate: formData.startDate,
+//           deadlineDate: formData.deadlineDate,
+//           startTime: currentStartTime,
+//           endTime: currentEndTime,
+//           status: 'Pending',
+
+
+//         }, {
+//           headers: {
+//             Authorization: localStorage.getItem('authToken'),
+//           },
+//         });
+
+//         if (notificationResponse.status === 201) {
+//           console.log('Notification send Successfully');
+//         }
+
+//         router.push('/taskList');
+//       }
+//     } catch (error) {
+//       if (error.response && error.response.data && error.response.data.errors) {
+//         setErrors(error.response.data.errors);
+//       } else {
+//         setErrors([{ msg: 'Internal Server Error' }]);
+//       }
+//     }
+//   };
+
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import jwt_decode from 'jwt-decode';
-// import Navbar from '../components/Navbar';
-// import AdminSidebar from '../components/AdminSidebar';
 import NavSide from '../components/NavSide';
 
 
-// const decodedToken = jwt_decode(localStorage.getItem('authToken'));
+const decodedToken = typeof window !== 'undefined' ? jwt_decode(localStorage.getItem('authToken')) : null  ;
 
 
 const getCurrentTimeIn12HourFormat = () => {
@@ -19,9 +221,7 @@ const getCurrentTimeIn12HourFormat = () => {
 
 const TaskForm = () => {
   const router = useRouter();
-  const [decodedToken, setDecodedToken] = useState(null);
-
-
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -30,7 +230,7 @@ const TaskForm = () => {
     assignTo: '',
     picture: null,
     audio: null,
-    assignedBy: null,
+    assignedBy: decodedToken?.employeeId,
   });
 
   const [errors, setErrors] = useState([]);
@@ -38,23 +238,6 @@ const TaskForm = () => {
   const [subemployees, setSubemployees] = useState([]);
   const [currentStartTime, setCurrentStartTime] = useState(getCurrentTimeIn12HourFormat());
   const [currentEndTime, setCurrentEndTime] = useState(getCurrentTimeIn12HourFormat());
-
-  useEffect(() => {
-    // Check if localStorage is available (only in the browser)
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const authToken = localStorage.getItem('authToken');
-      if (authToken) {
-        const decoded = jwt_decode(authToken);
-        setDecodedToken(decoded);
-        if (decoded && decoded.employeeId) {
-          setFormData({
-            ...formData,
-            assignedBy: decoded.employeeId,
-          });
-        }
-      }
-    }
-  }, []);
 
   useEffect(() => {
     axios
@@ -205,8 +388,7 @@ const TaskForm = () => {
 
   return (
     <>
-      <NavSide />
-
+      <NavSide/>
       {/* <div className="w-full flex justify-center items-center min-h-screen mt-12 pl-28"> */}
       <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
         {/* <div className=" max-w-2xl overflow-x-auto border border-red-200 rounded-lg p-5 bg-gray-50"> */}

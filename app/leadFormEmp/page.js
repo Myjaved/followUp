@@ -2,9 +2,6 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import AdminSidebar from '../components/AdminSidebar';
-import EmployeeSidebar from '../components/EmployeeSidebar';
 import NavSideEmp from '../components/NavSideEmp';
 
 
@@ -70,7 +67,7 @@ const LeadFormEmp = () => {
                 email: formData.email,
                 ownerName: formData.ownerName,
                 website: formData.website,
-                leadPicture:formData.leadPicture
+                leadPicture: formData.leadPicture
             };
 
             const leadNotificationResponse = await axios.post('http://localhost:5000/api/lead/create/Notification', leadNotificationData, { headers });
@@ -85,15 +82,17 @@ const LeadFormEmp = () => {
 
     return (
         <>
-            {/* <Navbar /> */}
-            {/* <Sidebar /> */}
-            {/* <EmployeeSidebar/> */}
-            <NavSideEmp/>
-            <div className="container mx-auto flex justify-center items-center mt-28 mb-15 pl-64">
-                <div className="w-1/2 ">
-                    <div className="bg-white shadow-md rounded px-8 py-8 mb-4 border border-gray-800">
-                        <h1 className="text-2xl font-bold mb-4 text-orange-500">Create Lead</h1>
+            <NavSideEmp />
+            <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
+
+                <div className="w-full md:w-1/2 mt-24 md:mt-0 lg:mt-0"> {/* Adjust the width and margin based on your design */}
+
+                    <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white">
+
+                        <h1 className="text-xl font-bold mb-4 text-orange-500">Create Lead</h1>
+
                         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="customerName">
                                     Customer Name
@@ -105,10 +104,10 @@ const LeadFormEmp = () => {
                                     value={formData.customerName}
                                     onChange={handleInputChange}
                                     placeholder='name'
-                                    className="border rounded-md px-3 py-1 w-full"
+                                    className="border rounded-md px-2 py-1 text-sm md:text-base w-full" // Adjust text size and padding
                                 />
                             </div>
-                            <div className="mb-2 pl-3">
+                            <div className="mb-2 pl-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="companyName">
                                     Company Name
                                 </label>
@@ -119,7 +118,7 @@ const LeadFormEmp = () => {
                                     value={formData.companyName}
                                     onChange={handleInputChange}
                                     placeholder='Company name'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="contactNo">
@@ -131,10 +130,10 @@ const LeadFormEmp = () => {
                                     name="contactNo"
                                     value={formData.contactNo}
                                     onChange={handleInputChange}
-                                    placeholder='+123-456-7890'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    placeholder='Enter Mobile No.'
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
                             </div>
-                            <div className="mb-2 pl-3">
+                            <div className="mb-2 pl-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
                                     Email
                                 </label>
@@ -144,8 +143,8 @@ const LeadFormEmp = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    placeholder='****@gmail.com'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    placeholder='Enter Email'
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="description">
@@ -154,21 +153,23 @@ const LeadFormEmp = () => {
                                 <input
                                     id="description"
                                     name="description"
+                                    placeholder='Lead description'
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
                             </div>
                             <div className="mb-2 pl-3">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="ownerName">
-                                    Company Owner&apos;s Name
+                                    Co.Owner&apos;s Name
                                 </label>
                                 <input
                                     type="text"
                                     id="ownerName"
                                     name="ownerName"
+                                    placeholder="Owner's name"
                                     value={formData.ownerName}
                                     onChange={handleInputChange}
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="website">
@@ -180,8 +181,8 @@ const LeadFormEmp = () => {
                                     name="website"
                                     value={formData.website}
                                     onChange={handleInputChange}
-                                    placeholder='www.example.com'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    placeholder='website URL'
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
                             </div>
                             <div className="mb-4 pl-3">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="leadPicture">
@@ -192,7 +193,7 @@ const LeadFormEmp = () => {
                                     id="leadPicture"
                                     name="leadPicture"
                                     onChange={handleChange}
-                                    className="border rounded-md px-3 py-1 w-full"
+                                    className="border rounded-md px-3 py-0.5 w-full text-xs md:text-base"
                                 />
                             </div>
 
@@ -200,7 +201,7 @@ const LeadFormEmp = () => {
                             <div className="col-span-2 flex justify-center">
                                 <button
                                     type="submit"
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm md:text-base"
                                 >
                                     Create Lead
                                 </button>

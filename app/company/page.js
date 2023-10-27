@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import SuperSidebar from '../components/SuperSidebar';
 import SuperNavbar from '../components/SuperNavbar';
+import NavSideSuper from '../components/NavSideSuper';
 
 const CompanyCreationForm = () => {
   const [companyName, setCompanyName] = useState('');
@@ -40,8 +41,9 @@ const CompanyCreationForm = () => {
 
   return (
     <>
-      <SuperSidebar />
-      <SuperNavbar />
+      {/* <SuperSidebar /> */}
+      {/* <SuperNavbar /> */}
+      <NavSideSuper/>
       <div className="bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <div className="w-full p-6 bg-white rounded-lg shadow dark:border sm:max-w-md dark:bg-gray-800 dark:border-gray-700 sm:p-8 mt-24">

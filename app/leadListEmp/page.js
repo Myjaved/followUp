@@ -108,7 +108,7 @@ const LeadListEmp = () => {
   return (
     <>
     <NavSideEmp/>
-      <div className='pl-72 mt-20 m-10'>
+    <div className="m-5 pl-5 md:pl-72 mt-20">
         <h2 className="text-2xl font-bold mb-4 text-indigo-500">Lead List</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded-lg shadow-md">
