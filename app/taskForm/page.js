@@ -1,206 +1,3 @@
-// 'use client'
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import { useRouter } from 'next/navigation';
-// import jwt_decode from 'jwt-decode';
-// import NavSide from '../components/NavSide';
-
-
-// const decodedToken = jwt_decode(localStorage.getItem('authToken'));
-
-
-// const getCurrentTimeIn12HourFormat = () => {
-//   const now = new Date();
-//   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-// };
-
-// const TaskForm = () => {
-//   const router = useRouter();
-//   const [decodedToken, setDecodedToken] = useState(null);
-
-
-//   const [formData, setFormData] = useState({
-//     title: '',
-//     description: '',
-//     startDate: new Date().toISOString().split('T')[0],
-//     deadlineDate: '',
-//     assignTo: '',
-//     picture: null,
-//     audio: null,
-//     assignedBy: decodedToken?.employeeId,
-//   });
-
-//   const [errors, setErrors] = useState([]);
-//   const [successMessage, setSuccessMessage] = useState('');
-//   const [subemployees, setSubemployees] = useState([]);
-//   const [currentStartTime, setCurrentStartTime] = useState(getCurrentTimeIn12HourFormat());
-//   const [currentEndTime, setCurrentEndTime] = useState(getCurrentTimeIn12HourFormat());
-
-//   // useEffect(() => {
-//   //   // Check if localStorage is available (only in the browser)
-//   //   if (typeof window !== 'undefined' && window.localStorage) {
-//   //     const authToken = localStorage.getItem('authToken');
-//   //     if (authToken) {
-//   //       const decoded = jwt_decode(authToken);
-//   //       setDecodedToken(decoded);
-//   //       if (decoded && decoded.employeeId) {
-//   //         setFormData({
-//   //           ...formData,
-//   //           assignedBy: decoded.employeeId,
-//   //         });
-//   //       }
-//   //     }
-//   //   }
-//   // }, []);
-
-//   useEffect(() => {
-//     axios
-//       .get('http://localhost:5000/api/employee/subemployees/list', {
-//         headers: {
-//           Authorization: localStorage.getItem('authToken'),
-//         },
-//       })
-//       .then((response) => {
-//         const subemployeeList = response.data.map((subemployee) => ({
-//           id: subemployee._id,
-//           name: `${subemployee.name} (Employee)`, // Include type (Employee)
-//           phoneNumber: subemployee.phoneNumber,
-//           type: 'Employee', // Indicate type in the data
-//         }));
-
-//         // Also add the Admin as an option
-//         subemployeeList.push({
-//           id: decodedToken.employeeId, // Use the Admin's ID
-//           name: `${decodedToken.name} (Admin)`, // Include type (Admin)
-//           phoneNumber: decodedToken.phoneNumber,
-//           type: 'Admin', // Indicate type in the data
-//         });
-
-//         console.log("subemployeeList", subemployeeList);
-//         setSubemployees(subemployeeList);
-//       })
-//       .catch((error) => {
-//         console.error('Error fetching subemployees:', error);
-//       });
-//     // axios
-//     //   .get('http://localhost:5000/api/employee/subemployees/list', {
-//     //     headers: {
-//     //       Authorization: localStorage.getItem('authToken'),
-//     //     },
-//     //   })
-//     //   .then((response) => {
-//     //     const subemployeeList = response.data.map((subemployee) => ({
-//     //       id: subemployee._id,
-//     //       name: subemployee.name,
-//     //       phoneNumber:subemployee.phoneNumber
-//     //     }));
-
-//     //     console.log("subemployeeList",subemployeeList)
-//     //     setSubemployees(subemployeeList);
-//     //   })
-//     //   .catch((error) => {
-//     //     console.error('Error fetching subemployees:', error);
-//     //   });
-
-//     // Set current start time when the component mounts
-//     setCurrentStartTime(getCurrentTimeIn12HourFormat());
-
-//     // Set current end time when the component mounts
-//     setCurrentEndTime(getCurrentTimeIn12HourFormat());
-//   }, []);
-
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData({
-//       ...formData,
-//       [name]: value,
-//     });
-//   };
-
-//   const handleFileChange = (e) => {
-//     const { name, files } = e.target;
-//     setFormData({
-//       ...formData,
-//       [name]: files[0],
-//     });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const selectedSubemployee = subemployees.find((subemployee) => subemployee.id === formData.assignTo);
-
-//     console.log(selectedSubemployee)
-//     if (!selectedSubemployee) {
-//       // Handle the case where no subemployee is selected
-//       return;
-//     }
-
-//     const phoneNumber = selectedSubemployee.phoneNumber;
-//     console.log(phoneNumber)
-
-//     const form = new FormData();
-//     form.append('title', formData.title);
-//     form.append('description', formData.description);
-//     form.append('startDate', formData.startDate);
-//     form.append('startTime', currentStartTime);
-//     form.append('deadlineDate', formData.deadlineDate);
-//     form.append('endTime', currentEndTime);
-//     form.append('assignTo', formData.assignTo);
-//     form.append('phoneNumber', phoneNumber); // Add phone number to the form
-//     form.append('picture', formData.picture);
-//     form.append('audio', formData.audio);
-//     form.append('assignedBy', formData.assignedBy);
-
-//     try {
-//       const response = await axios.post('http://localhost:5000/api/task/create', form, {
-//         headers: {
-//           Authorization: localStorage.getItem('authToken'),
-//           'Content-Type': 'multipart/form-data',
-//         },
-//       });
-
-//       if (response.status === 201) {
-//         console.log('Task created Successfully');
-//         setSuccessMessage(response.data.message);
-//         setErrors([]);
-
-
-//         const notificationResponse = await axios.post('http://localhost:5000/api/notification/create', {
-//           recipientId: formData.assignTo, // Add recipientId to the notification
-//           taskId: response.data.taskId, // Pass the task ID here
-//           message: 'A new task has been assigned to you !', // Customize the message as needed
-//           title: formData.title,
-//           description: formData.description,
-//           startDate: formData.startDate,
-//           deadlineDate: formData.deadlineDate,
-//           startTime: currentStartTime,
-//           endTime: currentEndTime,
-//           status: 'Pending',
-
-
-//         }, {
-//           headers: {
-//             Authorization: localStorage.getItem('authToken'),
-//           },
-//         });
-
-//         if (notificationResponse.status === 201) {
-//           console.log('Notification send Successfully');
-//         }
-
-//         router.push('/taskList');
-//       }
-//     } catch (error) {
-//       if (error.response && error.response.data && error.response.data.errors) {
-//         setErrors(error.response.data.errors);
-//       } else {
-//         setErrors([{ msg: 'Internal Server Error' }]);
-//       }
-//     }
-//   };
-
 
 'use client'
 
@@ -209,9 +6,11 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import jwt_decode from 'jwt-decode';
 import NavSide from '../components/NavSide';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 
-const decodedToken = typeof window !== 'undefined' ? jwt_decode(localStorage.getItem('authToken')) : null  ;
+const decodedToken = typeof window !== 'undefined' ? jwt_decode(localStorage.getItem('authToken')) : null;
 
 
 const getCurrentTimeIn12HourFormat = () => {
@@ -221,7 +20,7 @@ const getCurrentTimeIn12HourFormat = () => {
 
 const TaskForm = () => {
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -258,7 +57,7 @@ const TaskForm = () => {
         subemployeeList.push({
           id: decodedToken.employeeId, // Use the Admin's ID
           name: `${decodedToken.name} (Admin)`, // Include type (Admin)
-          phoneNumber: decodedToken.phoneNumber,
+          phoneNumber: null,
           type: 'Admin', // Indicate type in the data
         });
 
@@ -268,27 +67,7 @@ const TaskForm = () => {
       .catch((error) => {
         console.error('Error fetching subemployees:', error);
       });
-    // axios
-    //   .get('http://localhost:5000/api/employee/subemployees/list', {
-    //     headers: {
-    //       Authorization: localStorage.getItem('authToken'),
-    //     },
-    //   })
-    //   .then((response) => {
-    //     const subemployeeList = response.data.map((subemployee) => ({
-    //       id: subemployee._id,
-    //       name: subemployee.name,
-    //       phoneNumber:subemployee.phoneNumber
-    //     }));
 
-    //     console.log("subemployeeList",subemployeeList)
-    //     setSubemployees(subemployeeList);
-    //   })
-    //   .catch((error) => {
-    //     console.error('Error fetching subemployees:', error);
-    //   });
-
-    // Set current start time when the component mounts
     setCurrentStartTime(getCurrentTimeIn12HourFormat());
 
     // Set current end time when the component mounts
@@ -311,35 +90,77 @@ const TaskForm = () => {
     });
   };
 
+  const handleRemovePicture = () => {
+    setFormData({
+      ...formData,
+      picture: null,
+    });
+    const fileInput = document.getElementById('picture');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const handleRemoveAudio = () => {
+    setFormData({
+      ...formData,
+      audio: null,
+    });
+    const audioInput = document.getElementById('audio');
+    if (audioInput) {
+      audioInput.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
+    console.log("clicked")
     e.preventDefault();
 
-    const selectedSubemployee = subemployees.find((subemployee) => subemployee.id === formData.assignTo);
-
-    console.log(selectedSubemployee)
-    if (!selectedSubemployee) {
+    if (!formData.assignTo) {
       // Handle the case where no subemployee is selected
       return;
     }
 
-    const phoneNumber = selectedSubemployee.phoneNumber;
-    console.log(phoneNumber)
+    const selectedSubemployee = subemployees.find((subemployee) => subemployee.id === formData.assignTo);
+    const phoneNumber = selectedSubemployee ? selectedSubemployee.phoneNumber : null;
 
-    const form = new FormData();
-    form.append('title', formData.title);
-    form.append('description', formData.description);
-    form.append('startDate', formData.startDate);
-    form.append('startTime', currentStartTime);
-    form.append('deadlineDate', formData.deadlineDate);
-    form.append('endTime', currentEndTime);
-    form.append('assignTo', formData.assignTo);
-    form.append('phoneNumber', phoneNumber); // Add phone number to the form
-    form.append('picture', formData.picture);
-    form.append('audio', formData.audio);
-    form.append('assignedBy', formData.assignedBy);
+    console.log(selectedSubemployee)
+    // if (!selectedSubemployee) {
+    //   // Handle the case where no subemployee is selected
+    //   return;
+    // }
+
+    // const phoneNumber = selectedSubemployee.phoneNumber;
+
+    // const form = new FormData();
+    // form.append('title', formData.title);
+    // form.append('description', formData.description);
+    // form.append('startDate', formData.startDate);
+    // form.append('startTime', currentStartTime);
+    // form.append('deadlineDate', formData.deadlineDate);
+    // form.append('endTime', currentEndTime);
+    // form.append('assignTo', formData.assignTo);
+    // form.append('phoneNumber', phoneNumber); // Add phone number to the form
+    // form.append('picture', formData.picture);
+    // form.append('audio', formData.audio);
+    // form.append('assignedBy', formData.assignedBy);
+    const requestBody = {
+      title: formData.title,
+      description: formData.description,
+      startDate: formData.startDate,
+      startTime: currentStartTime,
+      deadlineDate: formData.deadlineDate,
+      endTime: currentEndTime,
+      assignTo: formData.assignTo,
+      phoneNumber: phoneNumber, // Update this with the appropriate variable
+      assignedBy: formData.assignedBy,
+      picture: formData.picture,
+      audio: formData.audio
+
+    };
 
     try {
-      const response = await axios.post('http://localhost:5000/api/task/create', form, {
+      const response = await axios.post('http://localhost:5000/api/task/create', requestBody, {
         headers: {
           Authorization: localStorage.getItem('authToken'),
           'Content-Type': 'multipart/form-data',
@@ -351,11 +172,10 @@ const TaskForm = () => {
         setSuccessMessage(response.data.message);
         setErrors([]);
 
-
         const notificationResponse = await axios.post('http://localhost:5000/api/notification/create', {
-          recipientId: formData.assignTo, // Add recipientId to the notification
-          taskId: response.data.taskId, // Pass the task ID here
-          message: 'A new task has been assigned to you !', // Customize the message as needed
+          recipientId: formData.assignTo,
+          taskId: response.data.taskId,
+          message: 'A new task has been assigned to you!',
           title: formData.title,
           description: formData.description,
           startDate: formData.startDate,
@@ -363,8 +183,6 @@ const TaskForm = () => {
           startTime: currentStartTime,
           endTime: currentEndTime,
           status: 'Pending',
-
-
         }, {
           headers: {
             Authorization: localStorage.getItem('authToken'),
@@ -372,7 +190,7 @@ const TaskForm = () => {
         });
 
         if (notificationResponse.status === 201) {
-          console.log('Notification send Successfully');
+          console.log('Notification sent Successfully');
         }
 
         router.push('/taskList');
@@ -384,11 +202,12 @@ const TaskForm = () => {
         setErrors([{ msg: 'Internal Server Error' }]);
       }
     }
+
   };
 
   return (
     <>
-      <NavSide/>
+      <NavSide />
       {/* <div className="w-full flex justify-center items-center min-h-screen mt-12 pl-28"> */}
       <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
         {/* <div className=" max-w-2xl overflow-x-auto border border-red-200 rounded-lg p-5 bg-gray-50"> */}
@@ -596,23 +415,63 @@ const TaskForm = () => {
             </div>
 
 
-
-
-            <div className="mb-1">
+            <div className="mb-1" style={{ position: 'relative' }}>
               <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
                 Picture / फोटो
               </label>
-              <input
-                type="file"
-                id="picture"
-                name="picture"
-                onChange={handleFileChange}
-                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm" // Adjust the width and text size for mobile and larger screens
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="file"
+                  id="picture"
+                  name="picture"
+                  onChange={handleFileChange}
+                  className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
+                  style={{ paddingRight: '2.5rem' }} // Adjust padding to accommodate the button
+                />
+                {formData.picture && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePicture}
+                    className="absolute text-black font-bold py-1 px-1 md:px-2 rounded-md text-xs md:text-sm"
+                    style={{ right: '0', top: '0', marginTop: '0.3rem', marginRight: '0.2rem' }}
+                  >
+                    {/* Remove */}
+                    <FontAwesomeIcon icon={faXmark} />
+
+                  </button>
+                )}
+              </div>
             </div>
 
+            
 
-            <div className="mb-1 md:pl-6">
+            <div className="mb-1 md:pl-6" style={{ position: 'relative' }}>
+              <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
+                Audio / ऑडिओ
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="file"
+                  id="audio"
+                  name="audio"
+                  onChange={handleFileChange}
+                  className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
+                  style={{ paddingRight: '2.5rem' }} // Adjust padding to accommodate the button
+                />
+                {formData.audio && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAudio}
+                    className="absolute text-black font-bold py-1 px-2 rounded-md text-xs md:text-sm"
+                    style={{ right: '0', top: '0', marginTop: '0.3rem',marginRight: '0.2rem' }}
+                  >
+                    {/* Remove */}
+                    <FontAwesomeIcon icon={faXmark} />
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* <div className="mb-1 md:pl-6">
               <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
                 Audio / ऑडिओ
               </label>
@@ -623,7 +482,7 @@ const TaskForm = () => {
                 onChange={handleFileChange}
                 className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm" // Adjust the width and text size for mobile and larger screens
               />
-            </div>
+            </div> */}
 
             <button
               type="submit"

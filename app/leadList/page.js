@@ -18,6 +18,8 @@ const LeadList = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
 
   const [editedLead, setEditedLead] = useState(null);
 
@@ -103,15 +105,37 @@ const LeadList = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const filteredLeads = leads.filter((lead) => {
+    // Implement the filtering logic based on your search criteria
+    return (
+      lead.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.contactNo.includes(searchQuery) ||
+      lead.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
 
   return (
     <>
-    {/* <Navbar/> */}
-    {/* <Sidebar/> */}
-    {/* <AdminSidebar/> */}
-    <NavSide/>
-    <div className="m-5 pl-5 md:pl-72 mt-20">
-    <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">Leads List</h1>
+      <NavSide />
+      <div className="m-5 pl-5 md:pl-72 mt-20">
+        <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">Leads List</h1>
+
+        <div className="flex justify-center items-center mb-4">
+          <input
+            type="text"
+            placeholder="Search leads..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/2"
+          />
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded-lg shadow-md">
             <thead>
@@ -126,18 +150,18 @@ const LeadList = () => {
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead,index) => (
+              {filteredLeads.map((lead, index) => (
                 <tr key={lead._id}>
-                  <td className="border border-gray-200 p-3 text-center">{index+1}</td>
+                  <td className="border border-gray-200 p-3 text-center">{index + 1}</td>
                   <td className="border border-gray-200 p-3">{lead.customerName}</td>
                   {/* <td className="border border-gray-200 p-3">{lead.companyName}</td> */}
                   <td className="border border-gray-200 p-3">{lead.description}</td>
                   <td className="border border-gray-200 p-3">{lead.contactNo}</td>
                   <td className="border border-gray-200 p-3">{lead.email}</td>
                   <td className="border border-gray-200 p-3">
-                  <FontAwesomeIcon
+                    <FontAwesomeIcon
                       icon={faPenToSquare}
-                      className="text-orange-500 hover:underline mr-5 pl-2 cursor-pointer"
+                      className="text-orange-500 hover:underline mr-5 pl-5 cursor-pointer"
                       onClick={() => handleEditClick(lead)}
                     />
                     <FontAwesomeIcon
@@ -178,34 +202,34 @@ const LeadList = () => {
 
         {isViewModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg">
-              <div className="p-1 text-center">
+            <div className="modal-container bg-white w-72 md:w-96 sm:p-6 rounded shadow-lg">
+              <div className="p-2 text-center">
                 <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Lead Details</h3>
                 {viewLead && (
                   <div>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'>Created By:</strong> {viewLead.assignedByName}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'>Customer Name:</strong> {viewLead.customerName}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'  >Company Name:</strong> {viewLead.companyName}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'>Contact No:</strong> {viewLead.contactNo}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'>Email:</strong> {viewLead.email}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'>Description:</strong> {viewLead.description}
                     </p>
                   </div>
                 )}
                 <button
                   onClick={() => setIsViewModalOpen(false)}
-                  className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded mt-4"
+                  className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded mt-4 text-sm md:text-base"
                 >
                   Cancel
                 </button>
@@ -216,11 +240,11 @@ const LeadList = () => {
 
         {isEditModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg">
-              <div className="p-1 text-center">
+            <div className="modal-container bg-white w-72 md:w-96 sm:p-6 rounded shadow-lg">
+              <div className="p-4 text-center">
                 <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Edit Lead</h3>
                 {editedLead && (
-                  <div>
+                  <div className='text-sm md:text-base'>
                     <div className="mb-2">
                       <label htmlFor="customerName" className="text-left justify-center block mb-2">
                         Customer Name
@@ -305,25 +329,30 @@ const LeadList = () => {
 
         {isDeleteModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg">
-              <h3 className="mb-5 text-lg font-semibold text-red-800 dark:text-gray-400 text-center">Confirm Deletion ?</h3>
-              <p className="mb-3 text-center">Are you sure you want to delete this lead?</p>
-              <div className="mt-4">
-                <button
-                  onClick={handleConfirmDelete}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-10 ml-12"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setIsDeleteModalOpen(false)}
-                  className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded ml-4"
-                >
-                  Cancel
-                </button>
-              </div>
+          <div className="modal-container bg-white sm:w-96 sm:p-5 rounded shadow-lg">
+            <div className="p-5 text-center">
+           <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                              </svg>
+            <p className="mb-5  justify-center font-medium
+            "> Delete this lead?</p>
+            <div className="mt-4">
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-4 rounded  text-sm md:text-base"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded text-sm md:text-base"
+              >
+                Cancel
+              </button>
             </div>
           </div>
+        </div>
+        </div>
         )}
       </div>
     </>

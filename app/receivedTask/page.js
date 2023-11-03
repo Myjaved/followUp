@@ -3,11 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
-import EmployeeSidebar from '../components/EmployeeSidebar';
 import Image from 'next/image';
 import NavSideEmp from '../components/NavSideEmp';
 
@@ -94,13 +91,7 @@ const ReceivedTaskList = () => {
     const currentDate = new Date();
     const deadlineDate = new Date(task.deadlineDate);
 
-    // if (task.status === 'completed') {
-    //   return { colorClass: 'bg-green-500', statusText: 'Completed' };
-    // } else if (deadlineDate < currentDate) {
-    //   return { colorClass: 'bg-red-500', statusText: 'Overdue' };
-    // } else {
-    //   return { colorClass: 'bg-orange-500', statusText: 'Pending' };
-    // }
+    
     if (task.status === 'completed') {
       return {
         colorClass: ' bg-green-200 rounded-full font-semibold text-center text-green-900',
@@ -143,11 +134,9 @@ const ReceivedTaskList = () => {
 
   return (
     <>
-      {/* <Navbar /> */}
-      {/* <EmployeeSidebar /> */}
       <NavSideEmp />
       <div className="m-5 pl-5 md:pl-72 mt-20">
-        <h2 className="text-2xl font-bold mb-4 m-6 text-orange-500">All Task List</h2>
+        <h2 className="text-xl md:text-2xl font-bold mb-4 m-6 text-orange-500">Received Task List</h2>
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
@@ -219,6 +208,7 @@ const ReceivedTaskList = () => {
             </table>
           </div>
         )}
+
         {/* View Task Modal */}
         {isViewModalOpen && (
           <div
@@ -226,7 +216,7 @@ const ReceivedTaskList = () => {
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           >
             <div
-              className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+              className="modal-container bg-white w-72 md:w-96 sm:p-6 rounded shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -236,41 +226,41 @@ const ReceivedTaskList = () => {
               >
                 {/* Close button icon */}
               </button>
-              <div className="p-1 text-center">
+              <div className="p-2 text-center text-sm md:text-base">
                 <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">
                   Task Details
                 </h3>
                 {viewTask && (
                   <div>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Title:</strong> {viewTask.title}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Description:</strong> {viewTask.description}
                     </p>
                     {/* <p className="mb-2 text-left justify-center">
                       <strong>Status:</strong> {viewTask.status}
                     </p> */}
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Start Date:</strong> {viewTask.startDate}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Start Time:</strong> {viewTask.startTime}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Deadline Date:</strong> {viewTask.deadlineDate}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>End Time:</strong> {viewTask.endTime}
                     </p>
                     {/* <p className="mb-2 text-left justify-center">
                       <strong>Assigned By:</strong> {viewTask.assignedBy?.name}
                     </p> */}
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Assigned By:</strong>{' '}
                       {viewTask.assignedBy ? viewTask.assignedBy.name : 'Self'}
                     </p>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-1 text-left justify-center">
                       <strong>Picture:</strong>{" "}
                       {viewTask.picture ? (
                         <button
@@ -285,21 +275,23 @@ const ReceivedTaskList = () => {
                       )}
                     </p>
 
-                    <p className="mb-2 text-left justify-center">
-                      <strong>Audio:</strong>{" "}
-                      {viewTask.audio ? (
-                        <>
-                          <audio controls>
+                    <p className="mb-2 text-left flex  item-center">
+                      {/* <strong>Audio:</strong>{" "}
+                      {viewTask.audio ? ( */}
+                        <span className='mr-1'> <strong>Audio:</strong></span>{" "}
+                        {viewTask.audio ? (
+                          <audio controls className='w=64 h-8 md:w-96 md:h-10 text-lg'>
                             <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
                             Your browser does not support the audio element.
                           </audio>
-                        </>
+                      
                       ) : (
                         "Not Added"
                       )}
                     </p>
                   </div>
                 )}
+
 
                 <button
                   type="button"
@@ -312,11 +304,12 @@ const ReceivedTaskList = () => {
             </div>
           </div>
         )}
+
         {isPreviewModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container bg-white w-72 md:w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
               <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
-              <div className="p-1 text-center">
+              <div className="p-8 text-center">
                 <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>
                 <Image
                   src={completeImageUrl}
@@ -326,7 +319,7 @@ const ReceivedTaskList = () => {
                 />
                 <button
                   type="button"
-                  className="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded mt-4 mr-2"
+                  className="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded mt-4 mr-2 text-sm md:text-base"
                   onClick={() => setIsPreviewModalOpen(false)}
                 >
                   Close

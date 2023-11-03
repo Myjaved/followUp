@@ -382,12 +382,12 @@ const NavSide = () => {
                                 </svg>
                             </button>
 
-                            <Link href="https://flowbite.com" className="flex ml-2 md:mr-24">
+                            <Link href="#" className="flex ml-2 md:mr-24">
                                 {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
                                 <span className="self-center text-base md:text-2xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-red-800">Admin</span>
                             </Link>
-
                         </div>
+
                         <div className="flex items-center">
                             <button
                                 onClick={toggleLeadDropdown}
@@ -402,7 +402,7 @@ const NavSide = () => {
                             </button>
 
                             {isLeadDropdownOpen && (
-                                <div className="origin-bottom-right absolute right-1 mt-20 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                <div className="origin-bottom-right absolute right-20 mt-40 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ">
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -413,7 +413,7 @@ const NavSide = () => {
                                             envelopeNotifications.map((notification, index) => (
                                                 <div
                                                     key={index}
-                                                    className={`px-4 py-2 text-sm text-gray-700 hover-bg-gray-300 cursor-pointer ${notification.clicked ? 'bg-red-500' : ''}`}
+                                                    className={` px-4 py-3 text-sm text-gray-700 hover-bg-gray-300 cursor-pointer ${notification.clicked ? 'bg-red-500' : ''}`}
                                                     role="menuitem"
                                                     onClick={() => handleLeadNotificationClick(notification)}
                                                 >
@@ -690,7 +690,7 @@ const NavSide = () => {
 
             {isChangePasswordModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-container bg-white md:w-2/5 lg:w2/5 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
                         <h2 className="text-xl font-semibold mb-4">Change Password</h2>
                         <form>
                             <div className="form-group mb-4">
@@ -699,6 +699,7 @@ const NavSide = () => {
                                     type="email"
                                     id="email"
                                     name="email"
+                                    placeholder='Enter Email Id'
                                     className={`w-full p-2 border rounded ${changePasswordErrors.email ? 'border-red-500' : ''}`}
                                     value={changePasswordData.email}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, email: e.target.value })}
@@ -713,6 +714,7 @@ const NavSide = () => {
                                     type="password"
                                     id="currentPassword"
                                     name="currentPassword"
+                                    placeholder='Enter Your Current Password'
                                     className={`w-full p-2 border rounded ${changePasswordErrors.currentPassword ? 'border-red-500' : ''}`}
                                     value={changePasswordData.currentPassword}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, currentPassword: e.target.value })}
@@ -727,6 +729,7 @@ const NavSide = () => {
                                     type="password"
                                     id="newPassword"
                                     name="newPassword"
+                                    placeholder='Enter New Password'
                                     className={`w-full p-2 border rounded ${changePasswordErrors.newPassword ? 'border-red-500' : ''}`}
                                     value={changePasswordData.newPassword}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, newPassword: e.target.value })}
@@ -738,7 +741,7 @@ const NavSide = () => {
                             <div className="flex justify-between">
                                 <button
                                     type="button"
-                                    className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                    className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
                                     onClick={handleChangePassword}
                                 >
                                     Change Password
@@ -758,7 +761,8 @@ const NavSide = () => {
 
 
 
-            <aside id="logo-sidebar" className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
+            <aside id="logo-sidebar"
+             className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>

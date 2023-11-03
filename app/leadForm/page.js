@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import AdminSidebar from '../components/AdminSidebar';
 import NavSide from '../components/NavSide';
-
+import { useRouter } from 'next/navigation';
 
 const LeadForm = () => {
+    const router=useRouter()
     const [formData, setFormData] = useState({
         customerName: '',
         companyName: '',
@@ -16,7 +15,7 @@ const LeadForm = () => {
         description: '',
         ownerName: '',
         website: '',
-        leadPicture: null, // Initialize with null since it's a file input
+        leadPicture: null,
     });
 
     const handleInputChange = (e) => {
@@ -24,8 +23,7 @@ const LeadForm = () => {
     };
 
     const handleChange = (e) => {
-        const file = e.target.files[0]; // Assuming a single file upload
-        setFormData({ ...formData, leadPicture: file });
+        setFormData({ ...formData, leadPicture: e.target.files[0] });
     };
 
     const clearForm = () => {
@@ -49,17 +47,14 @@ const LeadForm = () => {
             formDataWithFile.append(key, formData[key]);
         }
 
-        // Get the token from localStorage
         const token = localStorage.getItem('authToken');
-
-        // Create headers object with the Authorization token
         const headers = { Authorization: token };
 
-        // Make an API call to create a lead with the token in the headers
         try {
             const response = await axios.post('http://localhost:5000/api/lead/createLead', formDataWithFile, { headers });
             console.log('Lead created:', response.data);
 
+            // Send the lead notification
             const leadNotificationData = {
                 message: 'A new lead has been created',
                 description: formData.description,
@@ -69,14 +64,19 @@ const LeadForm = () => {
                 email: formData.email,
                 ownerName: formData.ownerName,
                 website: formData.website,
-                leadPicture: formData.leadPicture
             };
 
-            const leadNotificationResponse = await axios.post('http://localhost:5000/api/lead/create/Notification', leadNotificationData, { headers });
+            // Send the lead notification with the file
+            const leadNotificationFormData = new FormData();
+            for (const key in leadNotificationData) {
+                leadNotificationFormData.append(key, leadNotificationData[key]);
+            }
+            leadNotificationFormData.append('leadPicture', formData.leadPicture);
+
+            const leadNotificationResponse = await axios.post('http://localhost:5000/api/lead/create/Notification', leadNotificationFormData, { headers });
             console.log('Lead notification created:', leadNotificationResponse.data);
-
-
-            clearForm()
+            clearForm();
+            router.push('/leadList')
         } catch (error) {
             console.error('Error creating lead:', error);
         }
@@ -84,18 +84,12 @@ const LeadForm = () => {
 
     return (
         <>
-            {/* <Navbar />   */}
-            {/* <AdminSidebar /> */}
-
+           
             <NavSide />
-            {/* <div className="container mx-auto flex justify-center items-center mt-28 mb-15 pl-64"> */}
             <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
-
-                {/* <div className="w-1/2 "> */}
-                <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white mt-16">
-
-                    <div className="bg-white shadow-md rounded px-8 py-8 mb-4 border border-gray-800">
-                        <h1 className="text-2xl font-bold mb-4 text-orange-500">Create Lead</h1>
+                <div className="w-full md:w-1/2 mt-24 md:mt-0 lg:mt-0">
+                    <div className="w-max-w-2xl overflow-x-auto border border-gray-200 rouned-lg p-5 bg-white shadow-md rounded ">
+                        <h1 className="text-xl font-bold mb-4 text-orange-500">Create Lead</h1>
                         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="customerName">
@@ -107,8 +101,8 @@ const LeadForm = () => {
                                     name="customerName"
                                     value={formData.customerName}
                                     onChange={handleInputChange}
-                                    placeholder='name'
-                                    className="border rounded-md px-3 py-1 w-full"
+                                    placeholder='Enter Name'
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
                                 />
                             </div>
                             <div className="mb-2 pl-3">
@@ -122,7 +116,8 @@ const LeadForm = () => {
                                     value={formData.companyName}
                                     onChange={handleInputChange}
                                     placeholder='Company name'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="contactNo">
@@ -135,7 +130,8 @@ const LeadForm = () => {
                                     value={formData.contactNo}
                                     onChange={handleInputChange}
                                     placeholder='+123-456-7890'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                    />
                             </div>
                             <div className="mb-2 pl-3">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
@@ -148,7 +144,8 @@ const LeadForm = () => {
                                     value={formData.email}
                                     onChange={handleInputChange}
                                     placeholder='****@gmail.com'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                     />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="description">
@@ -159,11 +156,12 @@ const LeadForm = () => {
                                     name="description"
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                    />
                             </div>
                             <div className="mb-2 pl-3">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="ownerName">
-                                    Company Owner&apos;s Name
+                                    Owner&apos;s Name
                                 </label>
                                 <input
                                     type="text"
@@ -171,7 +169,8 @@ const LeadForm = () => {
                                     name="ownerName"
                                     value={formData.ownerName}
                                     onChange={handleInputChange}
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                     />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="website">
@@ -184,7 +183,8 @@ const LeadForm = () => {
                                     value={formData.website}
                                     onChange={handleInputChange}
                                     placeholder='www.example.com'
-                                    className="border rounded-md px-3 py-1 w-full" />
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                     />
                             </div>
                             <div className="mb-4 pl-3">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="leadPicture">
@@ -195,14 +195,14 @@ const LeadForm = () => {
                                     id="leadPicture"
                                     name="leadPicture"
                                     onChange={handleChange}
-                                    className="border rounded-md px-3 py-1 w-full"
+                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
                                 />
                             </div>
 
                             <div className="col-span-2 flex justify-center">
                                 <button
                                     type="submit"
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    className="text-sm md:text-base  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                                 >
                                     Create Lead
                                 </button>

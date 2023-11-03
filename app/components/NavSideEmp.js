@@ -392,7 +392,7 @@ const NavSideEmp = () => {
                                 </svg>
                             </button>
 
-                            <Link href="https://flowbite.com" className="flex ml-2 md:mr-24">
+                            <Link href="#" className="flex ml-2 md:mr-24">
                                 {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
                                 <span className="self-center text-base md:text-xl font-semibold whitespace-nowrap dark:text-white md:pl-5 text-red-800">Employee</span>
                             </Link>
@@ -404,16 +404,16 @@ const NavSideEmp = () => {
                                 onClick={toggleLeadDropdown}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none mr-5"
                             >
-                                <FontAwesomeIcon icon={faEnvelope} className="text-xl fa-lg justify-between text-green-700" />
+                                <FontAwesomeIcon icon={faEnvelope} className="text-lg md:text-xl fa-lg justify-between text-green-700 pr-1" />
                                 {envelopeNotificationCount > 0 && (
-                                    <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs text-center absolute m-4 mt-0 -mr-2">
+                                    <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs text-center absolute m-3 mt-0 -mr-2">
                                         {envelopeNotificationCount}
                                     </span>
                                 )}
                             </button>
 
                             {isLeadDropdownOpen && (
-                                <div className={`origin-bottom-right absolute right-24 ${envelopeNotifications.length > 0 ? 'mt-40' : 'mt-20'} w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                <div className={`origin-bottom-right absolute right-3 md:right-24 ${envelopeNotifications.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-72 top-6 h-28 md:h-28 overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -428,10 +428,13 @@ const NavSideEmp = () => {
                                                     role="menuitem"
                                                     onClick={() => handleLeadNotificationClick(notification)}
                                                 >
-                                                    <div className="mb-2"><strong>{notification.message}</strong></div>
-                                                    <div className="mb-2"><strong>Title:</strong> {notification.description}</div>
-                                                    <div className="mb-2"><strong>Created By:</strong> {notification.assignedByName}</div>
-                                                    {/* Render lead notification content here */}
+                                                    <div className="mx-2 text-xs md:text-sm">
+
+                                                        <div className="mb-2"><strong>{notification.message}</strong></div>
+                                                        <div className="mb-2"><strong>Title:</strong> {notification.description}</div>
+                                                        <div className="mb-2"><strong>Created By:</strong> {notification.assignedByName}</div>
+                                                        {/* Render lead notification content here */}
+                                                    </div>
                                                 </div>
                                             ))
                                         ) : (
@@ -446,15 +449,18 @@ const NavSideEmp = () => {
                                 onClick={handleNotificationClick}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none"
                             >
-                                <FontAwesomeIcon icon={faBell} className="text-xl fa-lg justify-between mr-1 text-red-800" />
+                                <FontAwesomeIcon icon={faBell} className="text-lg md:text-xl fa-lg justify-between text-red-800 pr-2" />
                                 {notificationCount > 0 && (
-                                    <span className="relative bg-red-500 text-white rounded-full w-4 h-4 text-xs shadow-lg text-center top-0 right-3.5 -mt-3 mr-4">
+                                    <span className="relative bg-red-500 text-white rounded-full w-4 h-4 text-xs shadow-lg text-center top-0 right-3.5 -mt-3">
                                         {notificationCount}
                                     </span>
                                 )}
                             </button>
                             {showNotifications && (
-                                <div className={`origin-bottom-right absolute right-24 ${newTasks.length > 0 ? 'mt-44' : 'mt-20'} w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                // <div className=" absolute md:right-24 top-12 w-80 max-h-screen rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                <div className={`origin-bottom-right absolute right-3 md:right-24  ${newTasks.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-68 md:w-80 top-6 h-36 md:h-36 overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                    {/* <div className="origin-top-right absolute right-10 mt-44 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"> */}
+
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -470,10 +476,10 @@ const NavSideEmp = () => {
                                                     onClick={() => handleTaskClick(task)}
                                                 >
                                                     <div className='mx-2'>
-                                                        <div className='my-2'><strong>{task.assignedByName}</strong> <span className='mx-7'>{formatDateTime(task.createdAt)}</span></div>
+                                                        <div className='my-2'><strong>{task.assignedByName}</strong> <span className='mx-4'>{formatDateTime(task.createdAt)}</span></div>
                                                         <div className='my-1'><strong>{task.message}</strong></div>
                                                         <div className='my-1'><strong>Title :</strong> {task.title}</div>
-                                                        <div className='mb-3'><strong>Task ID :</strong> {task._id.slice(17, 23)}</div>
+                                                        <div className='mb-3'><strong>Task ID :</strong> #{task._id.slice(19,)}</div>
                                                         <hr />
                                                     </div>
                                                 </div>
@@ -487,7 +493,7 @@ const NavSideEmp = () => {
                                 </div>
                             )}
 
-                            <div className="flex items-center ml-3">
+                            <div className="flex items-center ml-1">
                                 <div className="relative inline-block text-left dropdown">
                                     <button
                                         onClick={toggleDropdown}
@@ -587,7 +593,7 @@ const NavSideEmp = () => {
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                 >
                     <div
-                        className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+                        className="modal-container bg-white w-72 md:w-96 p-2 md:p-6 rounded shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -597,7 +603,7 @@ const NavSideEmp = () => {
                         >
                         </button>
 
-                        <div className="p-1 text-center">
+                        <div className="p-2 text-center text-sm md:text-base">
                             <h3 className="mb-5 text-lg font-semibold text-gray-800 dark-text-gray-400">
                                 Task Details
                             </h3>
@@ -626,12 +632,13 @@ const NavSideEmp = () => {
                                 <p className="mb-2 text-left justify-center">
                                     <strong>Assigned By:</strong> {selectedTask.assignedByName}
                                 </p>
-                                <p className="mb-2 text-left justify-center">
-                                    <strong>Picture : </strong><Link href='/receivedTask'> Go to All Tasks to show</Link>
+                                {/* <p className="mb-2 text-left justify-center">
+                                    <strong>Picture : </strong><Link href='/receivedTask'><u>Click to go to list see the picture</u> </Link>
                                 </p>
                                 <p className="mb-2 text-left justify-center">
-                                    <strong>Audio : </strong><i> Open All Task List to Listen</i>
-                                </p>
+                                    <strong>Audio : </strong><Link href='/receivedTask'><u>Click to go to list to Listen the Audio</u> </Link>
+                                </p> */}
+
                             </div>
                             <button
                                 type="button"
@@ -826,14 +833,14 @@ const NavSideEmp = () => {
                                             <span className="ml-3 pl-1">Overdue Tasks</span>
                                         </Link>
                                     </li>
-                                    {/* <li>
-                                        <Link href="/sendTask"
+                                    <li>
+                                        <Link href="/sendTaskEmp"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faPaperPlane} size='xl'
                                                 style={{ color: "red", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-1">Tasks Send</span>
                                         </Link>
-                                    </li> */}
+                                    </li>
                                     <li>
                                         <Link href="/taskFormInternal" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faPenToSquare} size='xl' style={{ color: "#de4f35", marginLeft: '15px' }} />

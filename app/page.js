@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import jwtDecode from 'jwt-decode';
-import Dashboard from './dashboard/page';
-import AdminDashboard from './adminDashboard/page';
 import LoginForm from './login/page';
 import Vector from './vector/page';
 import VectorEmp from './vectorEmp/page';
@@ -63,49 +61,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
-// 'use client'
-
-// import React, { useEffect, useState } from 'react';
-// import Dashboard from './dashboard/page';
-// import jwtDecode from 'jwt-decode'; // Import a JWT decoding library
-// import AdminDashboard from './adminDashboard/page';
-
-
-// const Home = () => {
-//   const [userRole, setUserRole] = useState(null);
-
-//   useEffect(() => {
-//     // Example: Get the user role from a JWT token stored in localStorage
-//     const token = localStorage.getItem('authToken');
-
-//     if (token) {
-//       // Decode the JWT token to access user information (assuming it contains a "role" claim)
-//       const decodedToken = jwtDecode(token);
-//       const userRoleFromToken = decodedToken.role || 'guest';
-
-//       // Set the user's role in the state
-//       setUserRole(userRoleFromToken);
-//     } else {
-//       // Handle the case where there is no token (user is not authenticated)
-//       setUserRole('guest'); // Set a default role for unauthenticated users
-//     }
-//   }, []);
-
-//   return (
-//     <div>
-//       {/* Render the appropriate dashboard based on user role */}
-//       {userRole === 'admin' ? (
-//         <AdminDashboard />
-//       ) : userRole === 'sub-employee' ? (
-//         <Dashboard />
-//       ) : (
-//         null // <LoginForm /> // Render a default dashboard component for other roles or unauthenticated users
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Home;
-

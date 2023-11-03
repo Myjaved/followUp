@@ -3,11 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
-import AdminSidebar from '../components/AdminSidebar';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
 
@@ -22,7 +19,11 @@ const CompletedTaskList = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for Edit Task modal
+
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredTasks, setFilteredTasks] = useState([]);
 
 
 
@@ -88,6 +89,32 @@ const CompletedTaskList = () => {
     fetchCompletedTasks();
   }, []);
 
+
+
+  useEffect(() => {
+    const filtered = completedTasks.filter((completedTask) => {
+      console.log(completedTasks)
+      const assigneeName = completedTask.assignTo.toLowerCase();
+      const startDate = completedTask.startDate.toLowerCase();
+      const deadlineDate = formatDate(completedTask.deadlineDate);
+      const status = completedTask.status.toLowerCase();
+      const title = completedTask.title.toLowerCase();
+      const query = searchQuery.toLowerCase();
+
+      return (
+        assigneeName.includes(query) ||
+        title.includes(query) ||
+        status.includes(query) ||
+        startDate.includes(query) ||
+        deadlineDate.includes(query)
+      );
+    });
+
+    setFilteredTasks(filtered);
+  }, [searchQuery, completedTasks]);
+
+
+
   useEffect(() => {
     // Fetch Subemployee names and ObjectIds and populate the dropdown list
     const fetchSubemployees = async () => {
@@ -119,11 +146,14 @@ const CompletedTaskList = () => {
 
   const hideActions = typeof window !== 'undefined' ? window.localStorage.getItem('subUsername') : null;
 
+
   const openEditModal = (task) => {
     // Format the date to "yyyy-MM-dd" format
+    console.log("openEdit Modal open")
     const formattedStartDate = task.startDate.split('T')[0];
     const formattedDeadlineDate = task.deadlineDate.split('T')[0];
     setEditedTask({ ...task, startDate: formattedStartDate, deadlineDate: formattedDeadlineDate });
+    setIsEditModalOpen(true); // Open the Edit Modal
   };
 
   const saveChanges = async () => {
@@ -135,26 +165,35 @@ const CompletedTaskList = () => {
       const updatedTaskData = {
         startDate: formattedStartDate,
         deadlineDate: formattedDeadlineDate,
-        assignTo: editedTask.assignTo, // Pass the ObjectId of the selected Subemployee
+        // assignTo: editedTask.assignTo, // Pass the ObjectId of the selected Subemployee
       };
 
       console.log(updatedTaskData);
-      await axios.put(`http://localhost:5000/api/task/open/${editedTask._id}`, updatedTaskData, {
-        headers: {
-          Authorization: localStorage.getItem('authToken'),
-        },
-      });
+      if (
+        editedTask.startDate !== updatedTaskData.startDate ||
+        editedTask.deadlineDate !== updatedTaskData.deadlineDate
+      ) {
+        await axios.put(`http://localhost:5000/api/task/open/${editedTask._id}`, updatedTaskData, {
+          headers: {
+            Authorization: localStorage.getItem('authToken'),
+          },
+        });
 
-      // Remove the task from the list
-      setCompletedTasks(completedTasks.filter((task) => task._id !== editedTask._id));
+        // Remove the task from the list
+        setCompletedTasks(completedTasks.filter((task) => task._id !== editedTask._id));
 
-      setSuccessMessage('Task marked as open successfully.');
+        setSuccessMessage('Task marked as open successfully.');
 
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 2000);
 
-      setEditedTask(null);
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 2000);
+
+        setEditedTask(null);
+      } else {
+        // Handle a case where no changes are made
+        console.log("No changes made in the task.");
+      }
     } catch (error) {
       console.error('Error updating task:', error);
       // Handle errors here
@@ -213,7 +252,7 @@ const CompletedTaskList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {completedTasks.map((task, index) => (
+                    {filteredTasks.map((task, index) => (
                       <tr key={task._id}>
                         <td className="border px-4 py-2 text-center">{index + 1}</td>
                         <td className="border px-4 py-2">
@@ -237,20 +276,15 @@ const CompletedTaskList = () => {
                                 className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-xl"
                                 onClick={() => openViewModal(task)} // Add a View button here
                               />
-                              {/* <button
-                              className="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-700 ml-2 text-sm"
-                              onClick={() => openViewModal(task)} // Add a View button here
-                            >
-                              View
-                            </button> */}
                               <button
-                                className="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-blue-700 ml-4 text-sm"
+                                className="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-700 ml-4 text-sm"
                                 onClick={() => openEditModal(task)}
                               >
                                 Mark as Open
                               </button>
 
                             </div>
+
                           )}
                         </td>
                       </tr>
@@ -273,9 +307,10 @@ const CompletedTaskList = () => {
       {/* View Task Modal */}
       {viewModalOpen && selectedTask && (
         <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 bg-gray-700">
-          <div className="bg-white p-4 w-1/3 rounded-md">
-            <h2 className="text-2xl font-semibold mb-4 text-center">View Task</h2>
-            <div className='text-left pl-8'>
+          <div className="modal-container bg-white w-72 md:w-96 p-3 text-sm md:text-base rounded-md mt-16 md:mt-10">
+            <div className='p-2 text-center'>
+              <h2 className="text-xl font-semibold mb-5 text-center">View Task</h2>
+              {/* <div className='text-left pl-8'> */}
               {/* Display task details here */}
 
               <p className="mb-2 text-left justify-center">
@@ -302,19 +337,20 @@ const CompletedTaskList = () => {
                 )}
               </p>
 
-              <p className="mb-2 text-left justify-center">
-                <strong>Audio:</strong>{" "}
+
+              <p className="mb-2 text-left flex item-center">
+                <span className='mr-1 '><strong>Audio:</strong></span>{" "}
                 {selectedTask.audio ? (
-                  <>
-                    <audio controls>
-                      <source src={`http://localhost:5000/${selectedTask.audio}`} type="audio/mp3" />
-                      Your browser does not support the audio element.
-                    </audio>
-                  </>
+                  <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'>
+                    <source src={`http://localhost:5000/${selectedTask.audio}`} type="audio/mp3" />
+                    Your browser does not support the audio element.
+                  </audio>
+
                 ) : (
                   "Not Added"
                 )}
               </p>
+
 
 
               <div className='text-center'>
@@ -325,13 +361,14 @@ const CompletedTaskList = () => {
                   Close
                 </button>
               </div>
+              {/* </div> */}
             </div>
           </div>
         </div>
       )}
       {isPreviewModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-container bg-white w-72 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
             <div className="p-1 text-center">
               <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>
@@ -352,6 +389,49 @@ const CompletedTaskList = () => {
           </div>
         </div>
       )}
+
+      {isEditModalOpen && editedTask && (
+        <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 bg-gray-700">
+          <div className="bg-white p-4 w-72 md:w-96 rounded-md">
+            <h2 className="text-xl font-semibold mb-4 text-center">Edit Task</h2>
+            <div className="mb-4">
+              <label htmlFor="startDate" className="block mb-1">Start Date:</label>
+              <input
+                type="date"
+                id="startDate"
+                value={editedTask.startDate}
+                onChange={(e) => setEditedTask({ ...editedTask, startDate: e.target.value })}
+                className="px-2 py-1 border rounded-md focus:ring focus:ring-indigo-400 w-full"
+              />
+            </div>
+            <div className="mb-4">
+              <label htmlFor="deadlineDate" className="block mb-1">Deadline Date:</label>
+              <input
+                type="date"
+                id="deadlineDate"
+                value={editedTask.deadlineDate}
+                onChange={(e) => setEditedTask({ ...editedTask, deadlineDate: e.target.value })}
+                className="px-2 py-1 border rounded-md focus:ring focus:ring-indigo-400 w-full"
+              />
+            </div>
+            <div className="flex justify-center">
+              <button
+                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 mr-2 text-sm md:text-base"
+                onClick={saveChanges}
+              >
+                Save Changes
+              </button>
+              <button
+                className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-700 text-sm md:text-base"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ... (existing code) */}
     </>
   );

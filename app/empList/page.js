@@ -3,13 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { faEye } from '@fortawesome/free-solid-svg-icons';
-import SuperSidebar from '../components/SuperSidebar';
-import SuperNavbar from '../components/SuperNavbar';
 import NavSideSuper from '../components/NavSideSuper';
 
 
@@ -23,12 +20,16 @@ const EmployeeList = () => {
     const [viewEmployeeData, setViewEmployeeData] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false); // State to control the view modal
 
+    const itemsPerPage = 7; // Number of items to show per page
+    const [currentPage, setCurrentPage] = useState(1);
+
     const [companies, setCompanies] = useState([]); // State to store the list of companies
 
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
 
     const router = useRouter();
+
 
 
     useEffect(() => {
@@ -49,10 +50,20 @@ const EmployeeList = () => {
 
 
 
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Calculate the indexes for pagination
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentEmployees = employees.slice(indexOfFirstItem, indexOfLastItem);
 
     useEffect(() => {
         // Fetch the list of employees from your API endpoint
-        fetch('http://localhost:5000/api/employee/list')
+        // Make sure to add pagination logic in your API (to fetch specific employee range based on page number)
+        // Use pagination parameters in the API endpoint to fetch limited employee records
+        fetch(`http://localhost:5000/api/employee/list?page=${currentPage}&limit=${itemsPerPage}`)
             .then((response) => response.json())
             .then((data) => {
                 setEmployees(data);
@@ -60,7 +71,20 @@ const EmployeeList = () => {
             .catch((error) => {
                 console.error('Error fetching employees:', error);
             });
-    }, []);
+    }, [currentPage]); // Trigger this effect whenever the currentPage changes
+
+
+    // useEffect(() => {
+    //     // Fetch the list of employees from your API endpoint
+    //     fetch('http://localhost:5000/api/employee/list')
+    //         .then((response) => response.json())
+    //         .then((data) => {
+    //             setEmployees(data);
+    //         })
+    //         .catch((error) => {
+    //             console.error('Error fetching employees:', error);
+    //         });
+    // }, []);
 
     const handleEditClick = (employeeId) => {
         // Open the edit modal when the "Edit" button is clicked
@@ -86,7 +110,7 @@ const EmployeeList = () => {
             await axios.put(`http://localhost:5000/api/employee/edit/${editedEmployee._id}`, updatedEmployee);
 
             // Update the employee list with the edited data (optional)
-            setEmployees(employees.map((employee) =>
+            setEmployees(currentEmployees.map((employee) =>
                 employee._id === editedEmployee._id ? updatedEmployee : employee
             ));
 
@@ -159,13 +183,14 @@ const EmployeeList = () => {
         router.push('/employee');
     };
 
+
     return (
         <>
             {/* <Navbar /> */}
             {/* <SuperNavbar/> */}
             {/* <SuperSidebar/> */}
             <NavSideSuper />
-            <div className="m-5 pl-5 md:pl-72 mt-20">
+            <div className="m-5 pl-1 md:pl-64 mt-20">
                 {/* Display error message */}
                 {error && <p className="text-red-500">{error}</p>}
 
@@ -183,14 +208,16 @@ const EmployeeList = () => {
                         className="bg-orange-500 text-white font-bold py-1 px-5 rounded-lg absolute top-2 right-1"
                         onClick={handleAddClick}
                     >
-                        Add Employee
+                        Add Admin
                     </button>
                 </div>
 
+
                 <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto mt-10">
+                    <table className="min-w-full table-auto mt-10 md:mt-5 ">
                         <thead className='bg-orange-500 text-white text-sm md:text-base'>
                             <tr>
+                                {/* <th className="px-4 py-2 text-center">Sr No.</th> */}
                                 <th className="px-4 py-2 text-center">Name</th>
                                 <th className="px-4 py-2 text-center">Email</th>
                                 <th className="px-4 py-1 text-center">Phone Number</th>
@@ -199,26 +226,27 @@ const EmployeeList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {employees.map((employee) => (
+                            {currentEmployees.map((employee, index) => (
                                 <tr key={employee._id}>
+                                    {/* <td className="border px-4 py-2 text-center">{index + 1}</td> */}
                                     <td className="border px-4 py-2 text-left">{employee.name}</td>
                                     <td className="border px-4 py-2">{employee.email}</td>
                                     <td className="border px-4 py-2 text-center">{employee.phoneNumber}</td>
-                                    <td className="border px-4 py-2 text-center">{employee.adminCompanyName}</td>
+                                    <td className="border px-4 py-2 text-center font-semibold">{employee.adminCompanyName}</td>
                                     <td className="border px-4 py-2">
                                         <FontAwesomeIcon
                                             icon={faPenToSquare}
-                                            className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5"
+                                            className="text-blue-500 hover:underline cursor-pointer pl-3"
                                             onClick={() => handleEditClick(employee._id)}
                                         />
                                         <FontAwesomeIcon
                                             icon={faTrash}
-                                            className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5"
+                                            className="text-blue-500 hover:underline cursor-pointer pl-5"
                                             onClick={() => handleDeleteClick(employee._id)}
                                         />
                                         <FontAwesomeIcon
                                             icon={faEye}
-                                            className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5"
+                                            className="text-blue-500 hover:underline cursor-pointer pl-5 -mr-5"
                                             onClick={() => handleViewClick(employee._id)}
                                         />
                                     </td>
@@ -227,6 +255,19 @@ const EmployeeList = () => {
                         </tbody>
                     </table>
 
+                    {employees.length > itemsPerPage && (
+                        <div className="flex justify-center mt-3">
+                            {Array.from({ length: Math.ceil(employees.length / itemsPerPage) }, (_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => paginate(i + 1)}
+                                    className={`mx-1 px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-red-700 text-white' : 'bg-red-200 text-black'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     {/* Edit Employee Modal */}
                     {isEditModalOpen && (
                         <div
@@ -234,7 +275,7 @@ const EmployeeList = () => {
                             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                         >
                             <div
-                                className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+                                className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <button
@@ -244,49 +285,49 @@ const EmployeeList = () => {
                                 >
                                     {/* Close button icon */}
                                 </button>
-                                <div className="p-6 text-center">
-                                    <h3 className="mb-5 text-2xl font-semibold text-gray-800 dark:text-gray-400">Update Admin</h3>
+                                <div className="p-14 text-center">
+                                    <h3 className="mb-3 text-xl md:text-2xl font-semibold text-gray-500 dark:text-gray-400">Update Admin</h3>
                                     {/* Modal content */}
                                     <div className="mb-4">
-                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-medium mb-2">
+                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-bold mb-0">
                                             Name
                                         </label>
                                         <input
                                             type="text"
-                                            className="w-full border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center"
+                                            className="w-full border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center text-sm md:text-base py-1"
                                             value={editedEmployee.name || ''}
                                             onChange={(e) => setEditedEmployee({ ...editedEmployee, name: e.target.value })}
                                         />
                                     </div>
                                     <div className="mb-4">
-                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-medium mb-2">
+                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-bold mb-0">
                                             Email
                                         </label>
                                         <input
                                             type="text"
-                                            className="w-full border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center"
+                                            className="w-full border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center text-sm md:text-base py-1"
                                             value={editedEmployee.email || ''}
                                             onChange={(e) => setEditedEmployee({ ...editedEmployee, email: e.target.value })}
                                         />
                                     </div>
                                     <div className="mb-4">
-                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-medium mb-2">
+                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-bold mb-0">
                                             Phone Number
                                         </label>
                                         <input
                                             type="text"
-                                            className="w-full border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center"
+                                            className="w-full border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center text-sm md:text-base py-1"
                                             value={editedEmployee.phoneNumber || ''}
                                             onChange={(e) => setEditedEmployee({ ...editedEmployee, phoneNumber: e.target.value })}
                                         />
                                     </div>
 
                                     <div className="mb-4">
-                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-medium mb-2">
+                                        <label className="block text-gray-800 dark:text-gray-200 text-sm font-bold mb-0">
                                             Company Name
                                         </label>
                                         <select
-                                            className="w-full border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center cursor-pointer"
+                                            className="w-full border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md text-center cursor-pointer text-sm md:text-base py-1"
                                             value={editedEmployee.adminCompanyName || ''}
                                             onChange={(e) => setEditedEmployee({ ...editedEmployee, adminCompanyName: e.target.value })}
                                         >
@@ -299,20 +340,22 @@ const EmployeeList = () => {
                                         </select>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        className="px-4 py-2 text-white bg-green-500 hover:bg-green-600 rounded-md mr-4 transition duration-300 ease-in-out"
-                                        onClick={editEmployee}
-                                    >
-                                        Save
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="px-4 py-2 text-white bg-green-700 hover:bg-green-600 rounded-md mr-4 transition duration-300 ease-in-out"
-                                        onClick={closeModal}
-                                    >
-                                        Cancel
-                                    </button>
+                                    <div className='-mb-10'>
+                                        <button
+                                            type="button"
+                                            className="text-xs md:text-base px-5 py-2 text-white bg-green-500 hover:bg-green-600 rounded-md mr-4 transition duration-300 ease-in-out"
+                                            onClick={editEmployee}
+                                        >
+                                            Save
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="text-xs md:text-base px-3 py-2 text-white bg-green-700 hover:bg-green-600 rounded-md mr-2 transition duration-300 ease-in-out"
+                                            onClick={closeModal}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -325,7 +368,7 @@ const EmployeeList = () => {
                             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} // Semi-transparent background
                         >
                             <div
-                                className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+                                className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg"
                                 onClick={closeModal} // Close the modal when the backdrop is clicked
                             >
                                 <button
@@ -335,27 +378,26 @@ const EmployeeList = () => {
                                 >
                                     {/* Close button icon */}
                                 </button>
-                                <div className="p-6 text-center">
+                                <div className="p-4 text-center">
                                     <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                     </svg>
-                                    <h3 className="mb-5 text-lg font-normal text-gray-800 dark:text-gray-400">Are you sure you want to delete this Admin?</h3>
+                                    <h3 className="mb-5 text-lg font-normal text-gray-800 dark:text-gray-400">Delete this Admin?</h3>
                                     {/* Modal content */}
                                     {/* ... (content of the delete modal) */}
                                     <button
                                         type="button"
-                                        className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2"
+                                        className="text-white text-xs md:text-sm bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg inline-flex items-center px-5 py-2.5 text-center mr-2"
                                         onClick={() => confirmDelete(employeeToDelete)} // Pass the selected employee's ID
-                                    // Call the confirmDelete function when "Yes, I'm sure" is clicked
                                     >
                                         Yes, I&apos;m sure
                                     </button>
                                     <button
                                         type="button"
-                                        className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                                        className="text-gray-500 text-xs md:text-sm bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
                                         onClick={closeModal} // Close the modal when "No, cancel" is clicked
                                     >
-                                        No, cancel
+                                        No, Cancel
                                     </button>
                                 </div>
                             </div>
@@ -368,7 +410,7 @@ const EmployeeList = () => {
                             className="fixed inset-0 flex items-center justify-center z-50"
                             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                         >
-                            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg">
+                            <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg">
                                 <button
                                     type="button"
                                     className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -396,7 +438,7 @@ const EmployeeList = () => {
                                     )}
                                     <button
                                         type="button"
-                                        className="px-6 py-2 text-white bg-indigo-500 hover:bg-indigo-800 rounded-md mt-4"
+                                        className="px-6 py-2 text-white bg-indigo-500 hover:bg-indigo-800 rounded-md mt-4 text-xs md:text-base"
                                         onClick={() => setIsViewModalOpen(false)} // Close the modal when "Close" is clicked
                                     >
                                         Close

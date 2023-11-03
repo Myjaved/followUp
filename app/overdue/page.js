@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import AdminSidebar from '../components/AdminSidebar';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
 
@@ -17,7 +14,9 @@ const Overdue = () => {
   const [viewTask, setViewTask] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredTasks, setFilteredTasks] = useState([]);
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -29,7 +28,11 @@ const Overdue = () => {
     setPreviewImageUrl(completeImageUrl);
     setIsPreviewModalOpen(true);
   };
-  
+
+  const formatDate = (dateString) => {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-GB', options);
+  };
 
   // Fetch overdue tasks when the component mounts
   useEffect(() => {
@@ -79,6 +82,29 @@ const Overdue = () => {
     fetchOverdueTasks();
   }, []);
 
+  useEffect(() => {
+    const filtered = overdueTasks.filter((task) => {
+      console.log(overdueTasks)
+      const assigneeName = task.assignTo.toLowerCase();
+      const startDate = task.startDate.toLowerCase();
+      const deadlineDate = formatDate(task.deadlineDate);
+      const status = task.status.toLowerCase();
+      const title = task.title.toLowerCase();
+      const query = searchQuery.toLowerCase();
+
+      return (
+        assigneeName.includes(query) ||
+        deadlineDate.includes(query) ||
+        title.includes(query) ||
+        status.includes(query) ||
+        startDate.includes(query)
+      );
+    });
+
+    setFilteredTasks(filtered);
+  }, [searchQuery, overdueTasks]);
+
+
   // Function to handle viewing a task
   const handleViewTask = (task) => {
     setViewTask(task); // Set the task to be viewed
@@ -91,9 +117,7 @@ const Overdue = () => {
 
   return (
     <>
-      {/* <Navbar /> */}
-      {/* <Sidebar /> */}
-      {/* <AdminSidebar /> */}
+
       <NavSide />
       <div className="m-5 pl-1 md:pl-64 mt-20">
         <h1 className="text-xl font-bold mb-4 text-orange-500 md:text-2xl">Overdue Tasks</h1>
@@ -134,7 +158,7 @@ const Overdue = () => {
               </thead>
               <tbody>
                 {overdueTasks.length > 0 ? (
-                  overdueTasks.map((task, index) => (
+                  filteredTasks.map((task, index) => (
                     <tr key={task._id}>
                       <td className="px-4 py-2 text-center border">{index + 1}</td>
                       <td className="px-4 py-2 text-center border">{task.title}</td>
@@ -172,72 +196,73 @@ const Overdue = () => {
       {/* View Task Modal */}
       {viewTask && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
-          <div className="bg-white p-4 w-1/2 rounded-md">
-            <h2 className="text-2xl font-semibold mb-4">Task Details</h2>
-            <div>
-              <p className="mb-2 text-left justify-center">
-                <strong>AssignedBy:</strong> {viewTask.assignedBy}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>AssignTo:</strong> {viewTask.assignTo}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>Title:</strong> {viewTask.title}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>Description:</strong> {viewTask.description}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>Status:</strong> Overdue
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>Date:</strong> {new Date(viewTask.startDate).toLocaleDateString('en-GB')}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>Start Time:</strong> {viewTask.startTime}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>DeadLine:</strong> {new Date(viewTask.deadlineDate).toLocaleDateString('en-GB')}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>End Time:</strong> {viewTask.endTime}
-              </p>
-              <p className="mb-2 text-left justify-center">
-                <strong>Picture:</strong>{" "}
-                {viewTask.picture ? (
-                  <button
-                    type="button"
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
-                    onClick={() => handlePicturePreview(viewTask.picture)}
-                  >
-                    Preview
-                  </button>
-                ) : (
-                  "Not Added"
-                )}
-              </p>
+          <div className="modal-container bg-white w-72 md:w-96 sm:p-6 text-xs md:text-base rounded-md">
+            <div className='p-2 text-center'>
+              <h2 className="text-xl text-center font-semibold mb-4">Task Details</h2>
+              <div>
+                <p className="mb-2 text-left justify-center">
+                  <strong>AssignedBy:</strong> {viewTask.assignedBy}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>AssignTo:</strong> {viewTask.assignTo}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>Title:</strong> {viewTask.title}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>Description:</strong> {viewTask.description}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>Status:</strong> Overdue
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>Date:</strong> {new Date(viewTask.startDate).toLocaleDateString('en-GB')}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>Start Time:</strong> {viewTask.startTime}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>DeadLine:</strong> {new Date(viewTask.deadlineDate).toLocaleDateString('en-GB')}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>End Time:</strong> {viewTask.endTime}
+                </p>
+                <p className="mb-2 text-left justify-center">
+                  <strong>Picture:</strong>{" "}
+                  {viewTask.picture ? (
+                    <button
+                      type="button"
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
+                      onClick={() => handlePicturePreview(viewTask.picture)}
+                    >
+                      Preview
+                    </button>
+                  ) : (
+                    "Not Added"
+                  )}
+                </p>
 
-              <p className="mb-2 text-left justify-center">
-                <strong>Audio:</strong>{" "}
-                {viewTask.audio ? (
-                  <>
-                    <audio controls>
+                <p className="mb-2 text-left flex item-center">
+                  <span className='mr-1 '><strong>Audio:</strong></span>{" "}
+                  {viewTask.audio ? (
+                    <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'>
                       <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
                       Your browser does not support the audio element.
                     </audio>
-                  </>
-                ) : (
-                  "Not Added"
-                )}
-              </p>
-              <p className='text-center'>
-                <button
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                  onClick={handleCloseViewModal}
-                >
-                  Close
-                </button>
-              </p>
+
+                  ) : (
+                    "Not Added"
+                  )}
+                </p>
+                <p className='text-center'>
+                  <button
+                    className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                    onClick={handleCloseViewModal}
+                  >
+                    Close
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
         </div>

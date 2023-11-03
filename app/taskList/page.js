@@ -3,14 +3,13 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
+import { faCircleExclamation,faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import { format, parse, isBefore } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import AdminSidebar from '../components/AdminSidebar';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
+
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -90,6 +89,7 @@ const PendingTasks = () => {
 
   const handlePicturePreview = (imageUrl) => {
     const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
+    console.log(completeImageUrl)
     setPreviewImageUrl(completeImageUrl);
     setIsPreviewModalOpen(true);
   };
@@ -97,6 +97,65 @@ const PendingTasks = () => {
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
   };
+
+  // useEffect(() => {
+  //   const fetchAllTasks = async () => {
+  //     try {
+  //       const token = localStorage.getItem('authToken');
+  //       const response = await axios.get('http://localhost:5000/api/task/list', {
+  //         headers: {
+  //           Authorization: token,
+  //         },
+  //       });
+
+  //       if (response.status === 200) {
+  //         if (Array.isArray(response.data.tasks)) {
+  //           const currentDate = new Date();
+  //           const tasksWithAssignedNames = await Promise.all(
+  //             response.data.tasks.map(async (task) => {
+  //               const employeeResponse = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
+  //                 headers: {
+  //                   Authorization: token,
+  //                 },
+  //               });
+
+  //               if (employeeResponse.status === 200) {
+  //                 task.assigneeName = employeeResponse.data.name;
+  //               }
+
+  //               task.startDate = formatDate(task.startDate);
+  //               const formattedDeadlineDate = format(new Date(task.deadlineDate), 'dd/MM/yyyy');
+  //               task.deadlineDate = parse(formattedDeadlineDate, 'dd/MM/yyyy', new Date());
+
+  //               // Check if the task is completed or overdue
+  //               if (task.status === 'completed') {
+  //                 // Task is completed, no need to check deadline
+  //               } else if (isBefore(task.deadlineDate, currentDate)) {
+  //                 task.status = 'overdue';
+  //               } else {
+  //                 task.status = 'pending';
+  //               }
+
+  //               return task;
+  //             })
+  //           );
+
+  //           setTasks(tasksWithAssignedNames);
+  //         } else {
+  //           console.error('API response is not an array:', response.data);
+  //         }
+  //       } else {
+  //         console.error('Failed to fetch tasks');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchAllTasks();
+  // }, []);
 
   useEffect(() => {
     const fetchAllTasks = async () => {
@@ -107,26 +166,31 @@ const PendingTasks = () => {
             Authorization: token,
           },
         });
-
+  
         if (response.status === 200) {
           if (Array.isArray(response.data.tasks)) {
             const currentDate = new Date();
             const tasksWithAssignedNames = await Promise.all(
               response.data.tasks.map(async (task) => {
-                const employeeResponse = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
-                  headers: {
-                    Authorization: token,
-                  },
-                });
-
-                if (employeeResponse.status === 200) {
-                  task.assigneeName = employeeResponse.data.name;
+                try {
+                  const employeeResponse = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
+                    headers: {
+                      Authorization: token,
+                    },
+                  });
+  
+                  if (employeeResponse.status === 200) {
+                    task.assigneeName = employeeResponse.data.name;
+                  }
+                } catch (error) {
+                  // If the employee is not found, set assigneeName as 'Employee Not Found'
+                  task.assigneeName = 'Employee Not Found';
                 }
-
+  
                 task.startDate = formatDate(task.startDate);
                 const formattedDeadlineDate = format(new Date(task.deadlineDate), 'dd/MM/yyyy');
                 task.deadlineDate = parse(formattedDeadlineDate, 'dd/MM/yyyy', new Date());
-
+  
                 // Check if the task is completed or overdue
                 if (task.status === 'completed') {
                   // Task is completed, no need to check deadline
@@ -135,11 +199,11 @@ const PendingTasks = () => {
                 } else {
                   task.status = 'pending';
                 }
-
+  
                 return task;
               })
             );
-
+  
             setTasks(tasksWithAssignedNames);
           } else {
             console.error('API response is not an array:', response.data);
@@ -153,7 +217,7 @@ const PendingTasks = () => {
         setLoading(false);
       }
     };
-
+  
     fetchAllTasks();
   }, []);
 
@@ -232,7 +296,7 @@ const PendingTasks = () => {
           taskData.assigneeName = employeeResponse.data.name;
         }
 
-        console.log(taskData.picture)
+        console.log('Picture URL:',taskData.picture)
         console.log('Audio URL:', taskData.audio);
 
 
@@ -248,12 +312,9 @@ const PendingTasks = () => {
 
   return (
     <>
-      {/* <Navbar /> */}
-      {/* <Sidebar /> */}
-      {/* <AdminSidebar /> */}
       <NavSide />
     
-      <div className="m-5 pl-5 md:pl-72 mt-20">
+      <div className="m-5 pl-0 md:pl-64 mt-20">
         <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">All Tasks</h1>
         <div className="flex justify-center items-center mb-4">
           <input
@@ -265,9 +326,10 @@ const PendingTasks = () => {
           />
         </div>
 
-        <div className="relative mb-10 md:mb-20">
+
+        <div className="relative mb-16 md:mb-16">
           <button
-            className="bg-orange-500 text-white font-bold py-1 px-5 rounded-lg absolute top-2 right-1"
+            className="bg-orange-500 text-white font-bold py-1 px-5 md:px-7 rounded-lg absolute top-2 right-3"
             onClick={() => router.push('/taskForm')}
           >
             Add Task
@@ -275,8 +337,7 @@ const PendingTasks = () => {
         </div>
 
         
-        {loading ? (
-          
+        {loading ? (          
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
               icon={faSpinner}
@@ -287,14 +348,14 @@ const PendingTasks = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto">
-              <thead>
+              <thead className='bg-orange-400 text-white'>
                 <tr>
                   <th className="px-4 py-2 text-center">Sr.No.</th>
                   <th className="px-4 py-2 text-center">Title</th>
                   <th className="px-4 py-2 text-center">Status</th>
-                  <th className="px-4 py-2 text-center">Start Date</th>
+                  <th className="px-4 py-2 text-center">StartDate</th>
                   <th className="px-4 py-2 text-center">Deadline</th>
-                  <th className="px-4 py-2 text-center">Assign To</th>
+                  <th className="px-4 py-2 text-center">AssignTo</th>
                   <th className="px-4 py-2 text-center">Actions</th>
                 </tr>
               </thead>
@@ -342,13 +403,13 @@ const PendingTasks = () => {
 
         {isViewModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
-              <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsViewModalOpen(false)}></button>
-              <div className="p-1 text-center">
-                <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400 text-center">Task Details</h3>
+            <div className="modal-container bg-white w-72 md:w-96 sm:p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+              
+              <div className="p-2 text-center text-sm md:text-base">
+                <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-400 text-center">Task Details</h3>
                 {viewTask && (
                   <div>
-                    <p className="mb-2 text-left justify-center">
+                    <p className="mb-2 text-left justify-center ">
                       <strong>AssignTo:</strong> {viewTask.assigneeName}
                     </p>
                     <p className="mb-2 text-left justify-center">
@@ -383,19 +444,21 @@ const PendingTasks = () => {
                         "Not Added"
                       )}
                     </p>
-                    <p className="mb-2 text-left justify-center">
-                      <strong>Audio:</strong>{" "}
+                    
+                    <p className="mb-2 text-left flex item-center">
+                      <span className='mr-1 '><strong>Audio:</strong></span>{" "}
                       {viewTask.audio ? (
-                        <>
-                          <audio controls>
-                            <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
-                            Your browser does not support the audio element.
-                          </audio>
-                        </>
+                        <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'> 
+                          <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
+                          Your browser does not support the audio element.
+                        </audio>
+
                       ) : (
                         "Not Added"
                       )}
                     </p>
+
+
                   </div>
                 )}
                 <button
@@ -410,25 +473,27 @@ const PendingTasks = () => {
           </div>
         )}
 
+
         {isDeleteModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
               <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsDeleteModalOpen(false)}></button>
-              <div className="p-1 text-center">
-                <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Confirm Deletion</h3>
-                <p className="mb-5 text-left justify-center">
+              <div className="p-2 text-center">
+                {/* <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Confirm Deletion</h3> */}
+                <FontAwesomeIcon icon={faCircleExclamation} className='text-3xl md:text-5xl text-orange-600 mt-2' />
+                <p className="mb-3 text-center justify-center mt-3">
                   Are you sure you want to delete this task?
                 </p>
                 <button
                   type="button"
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2"
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2 text-xs md:text-base"
                   onClick={() => handleDelete()}
                 >
                   Confirm
                 </button>
                 <button
                   type="button"
-                  className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mt-4 text"
+                  className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mt-4 text text-xs md:text-base"
                   onClick={() => setIsDeleteModalOpen(false)}
                 >
                   Cancel
@@ -441,7 +506,7 @@ const PendingTasks = () => {
 
         {isPreviewModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container bg-white w-72 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
               <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
               <div className="p-1 text-center">
                 <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>
@@ -462,8 +527,8 @@ const PendingTasks = () => {
             </div>
           </div>
         )}
-      </div>
 
+      </div>
     </>
   );
 };

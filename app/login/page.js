@@ -103,35 +103,35 @@ const LoginForm = () => {
 
     return (
         <div className="bg-no-repeat bg-cover min-h-screen flex items-center justify-center sm:px-6 lg:px-8 bg-red-900" style={{ backgroundImage: `url(${backgroundImageUrl})` }}>
-            <div className="border border-gray-300 rounded-md max-w-md w-full space-y-8 p-6 bg-white">
+            <div className="border border-gray-300 rounded-md max-w-md w-3/4 md:w-1/2 space-y-8 p-10 bg-white ">
                 <div className="text-center">
                     <Image
                         src="/images/main_login1.png"
                         alt="login"
                         width={150}
                         height={150}
-                        className="mx-auto max-w-40 h-auto"
+                        className="mx-auto max-w-32"
                     />
-                    <h2 className="mt-1 text-3xl font-extrabold text-gray-900">Login</h2>
+                    <h2 className="mt-1 text-xl md:text-3xl font-extrabold text-gray-900">Login</h2>
                 </div>
-                <div className="flex justify-center space-x-4">
+                <div className="flex justify-center space-x-2">
                     <button
                         onClick={handleAdminLogin}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl"
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-2 md:px-4 py-2 md:py-2 rounded-lg md:rounded-xl text-xs md:text-base"
                     >
                         SuperAdmin
                     </button>
 
                     <button
                         onClick={handleEmployeeLogin}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl"
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-2 md:px-4 py-2 md:py-2 rounded-lg md:rounded-xl text-xs md:text-base"
                     >
                         Admin
                     </button>
 
                     <button
                         onClick={handleSubEmployeeLogin}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl"
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-2 md:px-4 py-2 md:py-2 rounded-lg md:rounded-xl text-xs md:text-base"
                     >
                         Employee
                     </button>

@@ -504,16 +504,17 @@ const NavSideSuper = () => {
 
             {isChangePasswordModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
-                        <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+                    <div className="modal-container bg-white md:w-2/5 lg:w-2/5 p-8 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="text-lg md:text-xl font-semibold mb-4 ">Change Password</h2>
                         <form>
                             <div className="form-group mb-4">
-                                <label htmlFor="email" className="block text-gray-700">Email:</label>
+                                <label htmlFor="email" className="block text-gray-700 text-sm md:text-base">Email:</label>
                                 <input
                                     type="email"
                                     id="email"
                                     name="email"
-                                    className={`w-full p-2 border rounded ${changePasswordErrors.email ? 'border-red-500' : ''}`}
+                                    placeholder='Enter Your Email'
+                                    className={`w-full p-2 border text-xs md:text-base rounded py-1 ${changePasswordErrors.email ? 'border-red-500' : ''}`}
                                     value={changePasswordData.email}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, email: e.target.value })}
                                 />
@@ -522,12 +523,13 @@ const NavSideSuper = () => {
                                 )}
                             </div>
                             <div className="form-group mb-4">
-                                <label htmlFor="currentPassword" className="block text-gray-700">Current Password:</label>
+                                <label htmlFor="currentPassword" className="block text-gray-700 text-sm md:text-base">Current Password:</label>
                                 <input
                                     type="password"
                                     id="currentPassword"
                                     name="currentPassword"
-                                    className={`w-full p-2 border rounded ${changePasswordErrors.currentPassword ? 'border-red-500' : ''}`}
+                                    placeholder='Enter Current Password'
+                                    className={`w-full p-2 border text-xs md:text-base rounded py-1 ${changePasswordErrors.currentPassword ? 'border-red-500' : ''}`}
                                     value={changePasswordData.currentPassword}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, currentPassword: e.target.value })}
                                 />
@@ -536,12 +538,13 @@ const NavSideSuper = () => {
                                 )}
                             </div>
                             <div className="form-group mb-4">
-                                <label htmlFor="newPassword" className="block text-gray-700">New Password:</label>
+                                <label htmlFor="newPassword" className="block text-gray-700 text-sm md:text-base">New Password:</label>
                                 <input
                                     type="password"
                                     id="newPassword"
+                                    placeholder='Enter New Password'
                                     name="newPassword"
-                                    className={`w-full p-2 border rounded ${changePasswordErrors.newPassword ? 'border-red-500' : ''}`}
+                                    className={`w-full p-2 border text-xs md:text-base rounded py-1 ${changePasswordErrors.newPassword ? 'border-red-500' : ''}`}
                                     value={changePasswordData.newPassword}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, newPassword: e.target.value })}
                                 />
@@ -552,14 +555,14 @@ const NavSideSuper = () => {
                             <div className="flex justify-between">
                                 <button
                                     type="button"
-                                    className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                    className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 text-xs md:text-sm"
                                     onClick={handleChangePassword}
                                 >
                                     Change Password
                                 </button>
                                 <button
                                     type="button"
-                                    className="bg-gray-300 hover-bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+                                    className="bg-gray-300 hover-bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded text-xs md:text-sm"
                                     onClick={closeChangePasswordModal}
                                 >
                                     Cancel
@@ -573,7 +576,7 @@ const NavSideSuper = () => {
 
 
 
-            <aside id="logo-sidebar" class={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
+            <aside id="logo-sidebar" className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>

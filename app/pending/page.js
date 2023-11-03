@@ -2,11 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import AdminSidebar from '../components/AdminSidebar';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
 
@@ -19,10 +16,32 @@ const PendingTasks = () => {
     const [completeImageUrl, setPreviewImageUrl] = useState('');
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
- 
+    const [filteredTasks, setFilteredTasks] = useState([]);
+
+    useEffect(() => {
+        setFilteredTasks(tasks);
+    }, [tasks]);
+
+    const applySearchFilter = () => {
+        const filtered = tasks.filter(
+            (task) =>
+                task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                task.assignTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                task.startDate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                task.deadlineDate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                task.status.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredTasks(filtered);
+    };
+
+    useEffect(() => {
+        applySearchFilter();
+    }, [searchQuery]);
+
+
     const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
+        setSearchQuery(event.target.value);
+    };
 
     const handlePicturePreview = (imageUrl) => {
         const completeImageUrl = `http://localhost:5000/${imageUrl}`;
@@ -136,7 +155,7 @@ const PendingTasks = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {tasks.map((task, index) => (
+                                {filteredTasks.map((task, index) => (
                                     <tr key={task._id}>
                                         <td className="border px-4 py-2 text-center">{index + 1}</td>
                                         <td className="border px-4 py-2 text-center text-orange-600 font-semibold">
@@ -163,73 +182,74 @@ const PendingTasks = () => {
 
             {/* View Task Modal */}
             {viewModalOpen && selectedTask && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
-                    <div className="bg-white p-4 w-1/2 rounded-md">
-                        <h2 className="text-2xl font-semibold mb-4">View Task</h2>
+                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-container bg-white w-72 md:w-96 sm:p-6 text-xs md:text-base rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-2 text-center">
 
-                        <div>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>AssignTo:</strong> {selectedTask.assignTo}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Title:</strong> {selectedTask.title}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Description:</strong> {selectedTask.description}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Status:</strong> {selectedTask.status}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Date:</strong> {selectedTask.startDate}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Start Time:</strong> {selectedTask.startTime}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>DeadLine:</strong> {selectedTask.deadlineDate}
-                            </p>
-                            <p className="mb-2 text-left justify-center">
-                                <strong>End Time:</strong> {selectedTask.endTime}
-                            </p>
+                            <h2 className="text-xl font-semibold mb-4">View Task</h2>
+                            <div>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>AssignTo:</strong> {selectedTask.assignTo}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Title:</strong> {selectedTask.title}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Description:</strong> {selectedTask.description}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Status:</strong> {selectedTask.status}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Date:</strong> {selectedTask.startDate}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Start Time:</strong> {selectedTask.startTime}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>DeadLine:</strong> {selectedTask.deadlineDate}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>End Time:</strong> {selectedTask.endTime}
+                                </p>
 
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Picture:</strong>{" "}
-                                {selectedTask.picture ? (
-                                    <button
-                                        type="button"
-                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
-                                        onClick={() => handlePicturePreview(selectedTask.picture)}
-                                    >
-                                        Preview
-                                    </button>
-                                ) : (
-                                    "Not Added"
-                                )}
-                            </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Picture:</strong>{" "}
+                                    {selectedTask.picture ? (
+                                        <button
+                                            type="button"
+                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
+                                            onClick={() => handlePicturePreview(selectedTask.picture)}
+                                        >
+                                            Preview
+                                        </button>
+                                    ) : (
+                                        "Not Added"
+                                    )}
+                                </p>
 
-                            <p className="mb-2 text-left justify-center">
-                                <strong>Audio:</strong>{" "}
-                                {selectedTask.audio ? (
-                                    <>
-                                        <audio controls>
+                                <p className="mb-2 text-left flex item-center">
+                                    <span className='mr-1 '><strong>Audio:</strong></span>{" "}
+                                    {selectedTask.audio ? (
+                                        <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'>
                                             <source src={`http://localhost:5000/${selectedTask.audio}`} type="audio/mp3" />
                                             Your browser does not support the audio element.
                                         </audio>
-                                    </>
-                                ) : (
-                                    "Not Added"
-                                )}
-                            </p>
 
-                            <p className='text-center'>
-                                <button
-                                    className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                                    onClick={closeViewModal}
-                                >
-                                    Close
-                                </button>
-                            </p>
+                                    ) : (
+                                        "Not Added"
+                                    )}
+                                </p>
+
+                                <p className='text-center'>
+                                    <button
+                                        className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                                        onClick={closeViewModal}
+                                    >
+                                        Close
+                                    </button>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -237,7 +257,7 @@ const PendingTasks = () => {
 
             {isPreviewModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-container bg-white w-72 md:w-80 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
                         <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
                         <div className="p-1 text-center">
                             <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>

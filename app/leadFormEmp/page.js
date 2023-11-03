@@ -91,10 +91,10 @@ const LeadFormEmp = () => {
 
                         <h1 className="text-xl font-bold mb-4 text-orange-500">Create Lead</h1>
 
-                        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
 
                             <div className="mb-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="customerName">
+                                <label className="block text-gray-700 text-sm font-bold mb-1 text-xs md:text-sm" htmlFor="customerName">
                                     Customer Name
                                 </label>
                                 <input
@@ -103,12 +103,12 @@ const LeadFormEmp = () => {
                                     name="customerName"
                                     value={formData.customerName}
                                     onChange={handleInputChange}
-                                    placeholder='name'
-                                    className="border rounded-md px-2 py-1 text-sm md:text-base w-full" // Adjust text size and padding
+                                    placeholder='Enter name'
+                                    className="border rounded-md px-2 py-1 text-xs md:text-sm w-full" // Adjust text size and padding
                                 />
                             </div>
                             <div className="mb-2 pl-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="companyName">
+                                <label className="block text-gray-700 text-sm font-bold mb-1 text-xs md:text-sm" htmlFor="companyName">
                                     Company Name
                                 </label>
                                 <input
@@ -118,10 +118,10 @@ const LeadFormEmp = () => {
                                     value={formData.companyName}
                                     onChange={handleInputChange}
                                     placeholder='Company name'
-                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
+                                    className="border rounded-md px-3 py-1 w-full text-xs md:text-sm" />
                             </div>
                             <div className="mb-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="contactNo">
+                                <label className="block text-gray-700 text-sm font-bold mb-1 text-xs md:text-sm" htmlFor="contactNo">
                                     Mobile No
                                 </label>
                                 <input
@@ -131,10 +131,10 @@ const LeadFormEmp = () => {
                                     value={formData.contactNo}
                                     onChange={handleInputChange}
                                     placeholder='Enter Mobile No.'
-                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
+                                    className="border rounded-md px-3 py-1 w-full text-xs md:text-sm" />
                             </div>
                             <div className="mb-2 pl-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
+                                <label className="block text-gray-700 font-bold mb-1 text-xs md:text-sm" htmlFor="email">
                                     Email
                                 </label>
                                 <input
@@ -144,22 +144,22 @@ const LeadFormEmp = () => {
                                     value={formData.email}
                                     onChange={handleInputChange}
                                     placeholder='Enter Email'
-                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
+                                    className="border rounded-md px-3 py-1 w-full text-xs md:text-sm" />
                             </div>
                             <div className="mb-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="description">
-                                    Lead Description
+                                <label className="block text-gray-700 font-bold mb-1 text-xs md:text-sm" htmlFor="description">
+                                    Lead Title
                                 </label>
                                 <input
                                     id="description"
                                     name="description"
-                                    placeholder='Lead description'
+                                    placeholder='Lead Title'
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
+                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-sm" />
                             </div>
                             <div className="mb-2 pl-3">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="ownerName">
+                                <label className="block text-gray-700 text-xs md:text-sm font-bold mb-1" htmlFor="ownerName">
                                     Co.Owner&apos;s Name
                                 </label>
                                 <input
@@ -169,10 +169,10 @@ const LeadFormEmp = () => {
                                     placeholder="Owner's name"
                                     value={formData.ownerName}
                                     onChange={handleInputChange}
-                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
+                                    className="border rounded-md px-3 py-1 w-full text-xs md:text-sm" />
                             </div>
                             <div className="mb-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="website">
+                                <label className="block text-gray-700 text-xs md:text-sm font-bold mb-1" htmlFor="website">
                                     Website
                                 </label>
                                 <input
@@ -182,10 +182,10 @@ const LeadFormEmp = () => {
                                     value={formData.website}
                                     onChange={handleInputChange}
                                     placeholder='website URL'
-                                    className="border rounded-md px-3 py-1 w-full text-sm md:text-base" />
+                                    className="border rounded-md px-3 py-1 w-full text-xs md:text-sm" />
                             </div>
                             <div className="mb-4 pl-3">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="leadPicture">
+                                <label className="block text-gray-700 text-xs md:text-sm font-bold mb-1" htmlFor="leadPicture">
                                     Lead Picture
                                 </label>
                                 <input
@@ -193,7 +193,7 @@ const LeadFormEmp = () => {
                                     id="leadPicture"
                                     name="leadPicture"
                                     onChange={handleChange}
-                                    className="border rounded-md px-3 py-0.5 w-full text-xs md:text-base"
+                                    className="border rounded-md px-3 py-0.5 w-full text-xs md:text-sm"
                                 />
                             </div>
 

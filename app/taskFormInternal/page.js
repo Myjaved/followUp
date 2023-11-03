@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import jwt_decode from 'jwt-decode';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import EmployeeSidebar from '../components/EmployeeSidebar';
 import NavSideEmp from '../components/NavSideEmp';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
+
 
 // const decodedToken = jwt_decode(localStorage.getItem('authToken'));
 // const decodedToken = typeof window !== 'undefined' ? window.localStorage.getItem('authToken') : null;
@@ -58,7 +58,7 @@ const TaskFormInternal = () => {
             .catch((error) => {
                 console.error('Error fetching subemployees:', error);
             });
-        
+
 
         // Set current start time when the component mounts
         setCurrentStartTime(getCurrentTimeIn12HourFormat());
@@ -83,23 +83,60 @@ const TaskFormInternal = () => {
         });
     };
 
+
+    const handleRemovePicture = () => {
+        setFormData({
+            ...formData,
+            picture: null,
+        });
+        const fileInput = document.getElementById('picture');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
+
+    const handleRemoveAudio = () => {
+        setFormData({
+            ...formData,
+            audio: null,
+        });
+        const audioInput = document.getElementById('audio');
+        if (audioInput) {
+            audioInput.value = '';
+        }
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const form = new FormData();
-        form.append('title', formData.title);
-        form.append('description', formData.description);
-        form.append('startDate', formData.startDate);
-        form.append('startTime', currentStartTime);
-        form.append('deadlineDate', formData.deadlineDate);
-        form.append('endTime', currentEndTime);
-        form.append('assignTo', formData.assignTo);
-        form.append('picture', formData.picture);
-        form.append('audio', formData.audio);
-        form.append('assignedBy', formData.assignedBy);
+        // const form = new FormData();
+        // form.append('title', formData.title);
+        // form.append('description', formData.description);
+        // form.append('startDate', formData.startDate);
+        // form.append('startTime', currentStartTime);
+        // form.append('deadlineDate', formData.deadlineDate);
+        // form.append('endTime', currentEndTime);
+        // form.append('assignTo', formData.assignTo);
+        // form.append('picture', formData.picture);
+        // form.append('audio', formData.audio);
+        // form.append('assignedBy', formData.assignedBy);
+
+        const requestBody = {
+            title: formData.title,
+            description: formData.description,
+            startDate: formData.startDate,
+            startTime: currentStartTime,
+            deadlineDate: formData.deadlineDate,
+            endTime: currentEndTime,
+            assignTo: formData.assignTo,
+            // phoneNumber: phoneNumber, // Update this with the appropriate variable
+            picture: formData.picture,
+            audio: formData.audio,
+            assignedBy: formData.assignedBy
+
+        };
 
         try {
-            const response = await axios.post('http://localhost:5000/api/task/createSubemployeeTask', form, {
+            const response = await axios.post('http://localhost:5000/api/task/createSubemployeeTask', requestBody, {
                 headers: {
                     Authorization: localStorage.getItem('authToken'),
                     'Content-Type': 'multipart/form-data',
@@ -123,31 +160,31 @@ const TaskFormInternal = () => {
 
     return (
         <>
-            {/* <Navbar /> */}
-            {/* <Sidebar /> */}
-            {/* <EmployeeSidebar/> */}
-            <NavSideEmp/>
+            <NavSideEmp />
 
-            <div className="w-full flex justify-center items-center m-10 pl-42 mt-8 bg-yellow-50 min-h-screen">
-                <div className="w-3/5 max-w-2xl">
-                    <h1 className="text-2xl font-bold mb-4 text-orange-500">Create Task</h1>
+            <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
+                <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white mt-16">
                     {successMessage && <div className="text-green-500">{successMessage}</div>}
+                    <div className=" col-span-2 mb-3 md:text-2xl font-bold text-orange-500 text-left">Create Task</div>
+
                     <div className="mb-2">
-                        <label htmlFor="title" className="block font-medium text-sm">
+                        <label htmlFor="title" className="block font-semibold text-xs lg:text-sm">
                             Title / कार्यासाठी नाव <span className="text-red-500">*</span>
                         </label>
+
                         <input
                             type="text"
                             id="title"
                             name="title"
                             value={formData.title}
                             onChange={handleInputChange}
-                            className="border rounded-md px-3 py-2 w-full"
+                            className="border-2 border-gray-200 rounded-md px-3 py-2 w-full "
                             required
                         />
                     </div>
+
                     <div className="mb-2">
-                        <label htmlFor="description" className="block font-medium text-sm">
+                        <label htmlFor="description" className="block font-semibold text-xs lg:text-sm">
                             Description / कार्य वर्णन <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -155,13 +192,13 @@ const TaskFormInternal = () => {
                             name="description"
                             value={formData.description}
                             onChange={handleInputChange}
-                            className="border rounded-md px-3 py-2 w-full"
+                            className="border-2 border-gray-200 rounded-md px-3 py-2 w-full "
                             required
                         />
                     </div>
 
                     <div className="mb-2">
-                        <label htmlFor="assignTo" className="block font-medium text-sm">
+                        <label htmlFor="assignTo" className="block font-semibold text-xs lg:text-sm">
                             Assign To / नियुक्त करा <span className="text-red-500">*</span>
                         </label>
                         <select
@@ -169,7 +206,7 @@ const TaskFormInternal = () => {
                             name="assignTo"
                             value={formData.assignTo}
                             onChange={handleInputChange}
-                            className="border rounded-md px-3 py-1 w-full"
+                            className="border-2 border-gray-200 rounded-md px-3 py-1 w-full"
                             required
                         >
                             <option value="" disabled>
@@ -185,8 +222,8 @@ const TaskFormInternal = () => {
 
                     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
                         <div className="mb-1">
-                            <label htmlFor="startDate" className="block font-medium text-sm">
-                                Start Date / सुरुवात दिनांक <span className="text-red-500">*</span>
+                            <label htmlFor="startDate" className="block font-semibold text-xs lg:text-sm">
+                                Start Date / सुरु दिनांक <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -194,17 +231,17 @@ const TaskFormInternal = () => {
                                 name="startDate"
                                 value={formData.startDate}
                                 onChange={handleInputChange}
-                                className="border rounded-md px-3 py-1 w-full"
+                                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full" // Adjust the width for mobile and larger screens
                                 required
                             />
                         </div>
 
 
-                        <div className="mb-4">
-                            <label htmlFor="startTime" className="block font-medium text-sm">
+                        <div className="mb-2">
+                            <label htmlFor="startTime" className="block font-semibold text-xs lg:text-sm md:pl-7">
                                 Start Time / सुरू वेळ <span className="text-red-500">*</span>
                             </label>
-                            <div className="flex items-center">
+                            <div className="flex items-center md:pl-6">
                                 <select
                                     name="startHour"
                                     value={currentStartTime.split(':')[0]}
@@ -212,7 +249,7 @@ const TaskFormInternal = () => {
                                         const newHour = e.target.value;
                                         setCurrentStartTime(`${newHour}:${currentStartTime.split(':')[1]} ${currentStartTime.split(' ')[1]}`);
                                     }}
-                                    className="border rounded-md px-2 py-1 mr-2"
+                                    className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-1"
                                     required
                                 >
                                     {Array.from({ length: 12 }, (_, i) => (
@@ -221,7 +258,7 @@ const TaskFormInternal = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <span>:</span>
+                                <span><strong>: </strong></span>
                                 <select
                                     name="startMinute"
                                     value={currentStartTime.split(':')[1].split(' ')[0]}
@@ -229,7 +266,7 @@ const TaskFormInternal = () => {
                                         const newMinute = e.target.value;
                                         setCurrentStartTime(`${currentStartTime.split(':')[0]}:${newMinute} ${currentStartTime.split(':')[1].split(' ')[1]}`);
                                     }}
-                                    className="border rounded-md px-2 py-1 mr-2"
+                                    className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
                                     required
                                 >
                                     {Array.from({ length: 60 }, (_, i) => (
@@ -245,7 +282,7 @@ const TaskFormInternal = () => {
                                         const newAmPm = e.target.value;
                                         setCurrentStartTime(`${currentStartTime.split(':')[0]}:${currentStartTime.split(':')[1].split(' ')[0]} ${newAmPm}`);
                                     }}
-                                    className="border rounded-md px-2 py-1"
+                                    className="border border-gray-200 rounded-md md:px-2 py-1.5"
                                     required
                                 >
                                     <option value="AM">AM</option>
@@ -256,8 +293,8 @@ const TaskFormInternal = () => {
 
 
                         <div className="mb-1">
-                            <label htmlFor="deadlineDate" className="block font-medium text-sm">
-                                Deadline Date / अंतिम दिनांक <span className="text-red-500">*</span>
+                            <label htmlFor="deadlineDate" className="block font-semibold text-xs lg:text-sm">
+                                Deadline/ अंतिम दिनांक <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -265,7 +302,7 @@ const TaskFormInternal = () => {
                                 name="deadlineDate"
                                 value={formData.deadlineDate}
                                 onChange={handleInputChange}
-                                className="border rounded-md px-3 py-1 w-full"
+                                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full" // Adjust the width for mobile and larger screens
                                 required
                             />
                         </div>
@@ -273,11 +310,11 @@ const TaskFormInternal = () => {
 
 
 
-                        <div className="mb-4">
-                            <label htmlFor="endTime" className="block font-medium text-sm">
+                        <div className="mb-2">
+                            <label htmlFor="endTime" className="block font-semibold md:pl-7 text-xs lg:text-sm ">
                                 End Time / अंतिम वेळ <span className="text-red-500">*</span>
                             </label>
-                            <div className="flex items-center">
+                            <div className="flex items-center md:pl-6">
                                 <select
                                     name="endHour"
                                     value={currentEndTime.split(':')[0]}
@@ -285,7 +322,7 @@ const TaskFormInternal = () => {
                                         const newHour = e.target.value;
                                         setCurrentEndTime(`${newHour}:${currentEndTime.split(':')[1]} ${currentEndTime.split(' ')[1]}`);
                                     }}
-                                    className="border rounded-md px-2 py-1 mr-2"
+                                    className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-1"
                                     required
                                 >
                                     {Array.from({ length: 12 }, (_, i) => (
@@ -294,7 +331,7 @@ const TaskFormInternal = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <span>:</span>
+                                <span><strong>:</strong></span>
                                 <select
                                     name="endMinute"
                                     value={currentEndTime.split(':')[1].split(' ')[0]}
@@ -302,7 +339,7 @@ const TaskFormInternal = () => {
                                         const newMinute = e.target.value;
                                         setCurrentEndTime(`${currentEndTime.split(':')[0]}:${newMinute} ${currentEndTime.split(':')[1].split(' ')[1]}`);
                                     }}
-                                    className="border rounded-md px-2 py-1 mr-2"
+                                    className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
                                     required
                                 >
                                     {Array.from({ length: 60 }, (_, i) => (
@@ -318,7 +355,7 @@ const TaskFormInternal = () => {
                                         const newAmPm = e.target.value;
                                         setCurrentEndTime(`${currentEndTime.split(':')[0]}:${currentEndTime.split(':')[1].split(' ')[0]} ${newAmPm}`);
                                     }}
-                                    className="border rounded-md px-2 py-1"
+                                    className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
                                     required
                                 >
                                     <option value="AM">AM</option>
@@ -329,31 +366,86 @@ const TaskFormInternal = () => {
 
 
 
-
-                        <div className="mb-1">
-                            <label htmlFor="picture" className="block font-medium text-sm">
-                                Picture / फोटो टाका
+                        {/* <div className="mb-1">
+                        <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
+                                Picture / फोटो
                             </label>
                             <input
                                 type="file"
                                 id="picture"
                                 name="picture"
                                 onChange={handleFileChange}
-                                className="border rounded-md px-3 py-1 w-full"
-                            />
+                                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
+                                />
+                        </div> */}
+                        <div className="mb-1" style={{ position: 'relative' }}>
+                            <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
+                                Picture / फोटो
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="file"
+                                    id="picture"
+                                    name="picture"
+                                    onChange={handleFileChange}
+                                    className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
+                                    style={{ paddingRight: '2.5rem' }} // Adjust padding to accommodate the button
+                                />
+                                {formData.picture && (
+                                    <button
+                                        type="button"
+                                        onClick={handleRemovePicture}
+                                        className="absolute text-black font-bold py-1 px-1 md:px-2 rounded-md text-xs md:text-sm"
+                                        style={{ right: '0', top: '0', marginTop: '0.3rem', marginRight: '0.2rem' }}
+                                    >
+                                        {/* Remove */}
+                                        <FontAwesomeIcon icon={faXmark} />
+
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        <div className="mb-3">
-                            <label htmlFor="audio" className="block font-medium text-sm">
-                                Audio / ऑडिओ टाका
+
+                        {/* <div className="mb-3">
+                            <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
+                                Audio / ऑडिओ
                             </label>
                             <input
                                 type="file"
                                 id="audio"
                                 name="audio"
                                 onChange={handleFileChange}
-                                className="border rounded-md px-3 py-1 w-full"
+                                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
                             />
+                        </div> */}
+
+                        <div className="mb-1 md:pl-6" style={{ position: 'relative' }}>
+                            <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
+                                Audio / ऑडिओ
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="file"
+                                    id="audio"
+                                    name="audio"
+                                    onChange={handleFileChange}
+                                    className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
+                                    style={{ paddingRight: '2.5rem' }} // Adjust padding to accommodate the button
+                                />
+                                {formData.audio && (
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveAudio}
+                                        className="absolute text-black font-bold py-1 px-2 rounded-md text-xs md:text-sm"
+                                        style={{ right: '0', top: '0', marginTop: '0.3rem', marginRight: '0.2rem' }}
+                                    >
+                                        {/* Remove */}
+                                        <FontAwesomeIcon icon={faXmark} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
+
                         <button
                             type="submit"
                             className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"

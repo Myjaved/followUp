@@ -3,8 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import Navbar from '@/app/components/Navbar';
+import Sidebar from '@/app/components/Sidebar';
+import AdminSidebar from '@/app/components/AdminSidebar';
+import Image from 'next/image';
 import NavSide from '@/app/components/NavSide';
 
+const getCurrentTimeIn12HourFormat = () => {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+};
 
 const EditForm = ({ params }) => {
     const router = useRouter();
@@ -14,8 +22,13 @@ const EditForm = ({ params }) => {
     const [assignees, setAssignees] = useState([]); // Define the assignees state variable
     const [successMessage, setSuccessMessage] = useState(''); // Initialize success message state
     const [subemployees, setSubemployees] = useState([]);
-    const [pictureFile, setPictureFile] = useState(null); // State for the new picture file
-    const [audioFile, setAudioFile] = useState(null); // State for the new audio file
+    const [pictureFile, setPictureFile] = useState(null); // State variable for picture file
+    const [audioFile, setAudioFile] = useState(null); // State variable for audio file
+    const [showPicturePreview, setShowPicturePreview] = useState(false);
+    const [currentStartTime, setCurrentStartTime] = useState(getCurrentTimeIn12HourFormat());
+    const [currentEndTime, setCurrentEndTime] = useState(getCurrentTimeIn12HourFormat());
+
+
 
     useEffect(() => {
         // Fetch task data by taskId when the component mounts
@@ -28,6 +41,7 @@ const EditForm = ({ params }) => {
                         Authorization: authToken, // Include the authToken in the headers
                     },
                 });
+                console.log(response.data)
                 if (response.status === 200) {
                     setTaskData(response.data);
                 } else {
@@ -69,47 +83,54 @@ const EditForm = ({ params }) => {
     }, [taskId]);
     console.log(taskId)
 
+
     const handleFormSubmit = async (e) => {
         e.preventDefault();
-        
-        const formData = new FormData();
-        formData.append('taskData', JSON.stringify(taskData));
-        formData.append('picture', pictureFile); // Assuming pictureFile holds the file object
-        console.log(pictureFile)
-      
+
+
+        // Make the Fetch API PUT request here
         try {
-          const authToken = localStorage.getItem('authToken');
-          
-          const response = await fetch(`http://localhost:5000/api/task/edit/${taskId}`, {
-            method: 'PUT',
-            headers: {
-              Authorization: authToken,
-            },
-            body: formData, // Set the form data here
-          });
-      
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Task updated successfully:', data);
-            router.push(`/taskList`);
-          } else {
-            console.error('Failed to update task');
-          }
+            const authToken = localStorage.getItem('authToken'); // Retrieve the authToken from localStorage
+            console.log(authToken);
+
+            const formData = new FormData();
+            formData.append('picture', pictureFile);
+            formData.append('audio', audioFile);
+            formData.append('taskData', JSON.stringify(taskData));
+
+            const response = await axios.put(`http://localhost:5000/api/task/edit/${taskId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: authToken,
+                },
+            });
+
+
+            if (response.status === 200) {
+                const data = response.data;
+                console.log('Task updated successfully:', data);
+                router.push(`/taskList`);
+            } else {
+                console.error('Failed to update task');
+            }
         } catch (error) {
-          console.error('Error:', error);
+            console.error('Error:', error);
         }
-      };
+    };
 
 
     const handlePictureChange = (e) => {
         // Set the selected picture file in the state
         setPictureFile(e.target.files[0]);
-    };
+        setTaskData({ ...taskData, picture: e.target.files[0].name });
 
+    };
 
     const handleAudioChange = (e) => {
         // Set the selected audio file in the state
         setAudioFile(e.target.files[0]);
+        setTaskData({ ...taskData, audio: e.target.files[0].name });
+
     };
 
 
@@ -119,10 +140,15 @@ const EditForm = ({ params }) => {
 
     return (
         <>
+            {/* <Navbar /> */}
+            {/* <Sidebar/> */}
+            {/* <AdminSidebar /> */}
             <NavSide />
+
             <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
                 <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white mt-16">
                     {successMessage && (<div className="mb-4 text-green-500">{successMessage}</div>)}
+
                     <div className=" col-span-2 mb-3 md:text-2xl font-bold text-orange-500 text-left">Edit Task</div>
                     <div className="mb-1">
                         <label htmlFor="title" className="block font-semibold text-xs lg:text-sm">Title</label>
@@ -153,17 +179,12 @@ const EditForm = ({ params }) => {
                         <select
                             id="assignTo"
                             className="border-2 border-gray-200 rounded-md px-3 py-1 w-full"
-                            value={taskData.assignTo || ''}
+                            value={taskData.assigneeName ? taskData.assigneeName._id : ''}
                             onChange={(e) => {
-                                // Find the subemployee object corresponding to the selected _id
-                                const selectedSubemployee = subemployees.find(
-                                    (subemployee) => subemployee.id === e.target.value
-                                );
-                                setTaskData({ ...taskData, assignTo: selectedSubemployee.id });
-
+                                const selectedSubemployee = subemployees.find((subemployee) => subemployee.id === e.target.value);
+                                setTaskData({ ...taskData, assigneeName: selectedSubemployee });
                             }}
                         >
-
                             <option value="">Select an Assign To</option>
                             {subemployees.map((subemployee) => (
                                 <option key={subemployee.id} value={subemployee.id}>
@@ -186,17 +207,28 @@ const EditForm = ({ params }) => {
                             />
                         </div>
 
-
-                        <div className="mb-1">
+                        {/* <div className="mb-1">
                             <label htmlFor="startTime" className="block font-semibold text-xs lg:text-sm md:pl-7">Start Time</label>
+                            <input
+                                type="time"
+                                id="startTime"
+                                className="w-full px-4 py-1.5 border rounded-lg focus:outline-none focus:border-blue-400"
+                                value={taskData.startTime || ''}
+                                onChange={(e) => setTaskData({ ...taskData, startTime: e.target.value })}
+                            />
+                        </div> */}
+
+                        <div className="mb-2">
+                            <label htmlFor="startTime" className="block font-semibold text-xs lg:text-sm md:pl-7">
+                                Start Time / सुरू वेळ <span className="text-red-500">*</span>
+                            </label>
                             <div className="flex items-center md:pl-6">
                                 <select
                                     name="startHour"
                                     value={taskData.startTime.split(':')[0]}
                                     onChange={(e) => {
                                         const newHour = e.target.value;
-                                        const newStartTime = `${newHour}:${taskData.startTime.split(':')[1].split(' ')[0]} ${taskData.startTime.split(' ')[1]}`;
-                                        setTaskData({ ...taskData, startTime: newStartTime });
+                                        setCurrentStartTime(`${newHour}:${currentStartTime.split(':')[1]} ${currentStartTime.split(' ')[1]}`);
                                     }}
                                     className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-1"
                                     required
@@ -207,16 +239,13 @@ const EditForm = ({ params }) => {
                                         </option>
                                     ))}
                                 </select>
-
                                 <span><strong>: </strong></span>
-
                                 <select
                                     name="startMinute"
                                     value={taskData.startTime.split(':')[1].split(' ')[0]}
                                     onChange={(e) => {
                                         const newMinute = e.target.value;
-                                        const newStartTime = `${taskData.startTime.split(':')[0]}:${newMinute} ${taskData.startTime.split(' ')[1]}`;
-                                        setTaskData({ ...taskData, startTime: newStartTime });
+                                        setCurrentStartTime(`${currentStartTime.split(':')[0]}:${newMinute} ${currentStartTime.split(':')[1].split(' ')[1]}`);
                                     }}
                                     className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
                                     required
@@ -232,8 +261,7 @@ const EditForm = ({ params }) => {
                                     value={taskData.startTime.split(' ')[1]}
                                     onChange={(e) => {
                                         const newAmPm = e.target.value;
-                                        const newStartTime = `${taskData.startTime.split(':')[0]}:${taskData.startTime.split(':')[1].split(' ')[0]} ${newAmPm}`;
-                                        setTaskData({ ...taskData, startTime: newStartTime });
+                                        setCurrentStartTime(`${currentStartTime.split(':')[0]}:${currentStartTime.split(':')[1].split(' ')[0]} ${newAmPm}`);
                                     }}
                                     className="border border-gray-200 rounded-md md:px-2 py-1.5"
                                     required
@@ -246,7 +274,7 @@ const EditForm = ({ params }) => {
 
 
                         <div className="mb-1">
-                            <label htmlFor="deadlineDate" className="block font-semibold text-xs lg:text-sm">Deadline Date</label>
+                            <label htmlFor="deadlineDate" className="block font-semibold text-xs lg:text-sm">Deadline</label>
                             <input
                                 type="date"
                                 id="deadlineDate"
@@ -257,9 +285,9 @@ const EditForm = ({ params }) => {
                         </div>
 
 
-                        <div className="mb-1">
+                        <div className="mb-2">
                             <label htmlFor="endTime" className="block font-semibold md:pl-7 text-xs lg:text-sm ">
-                                End Time
+                                End Time / अंतिम वेळ <span className="text-red-500">*</span>
                             </label>
                             <div className="flex items-center md:pl-6">
                                 <select
@@ -267,8 +295,7 @@ const EditForm = ({ params }) => {
                                     value={taskData.endTime.split(':')[0]}
                                     onChange={(e) => {
                                         const newHour = e.target.value;
-                                        const newEndTime = `${newHour}:${taskData.endTime.split(':')[1]} ${taskData.endTime.split(' ')[1]}`;
-                                        setTaskData({ ...taskData, endTime: newEndTime });
+                                        setCurrentEndTime(`${newHour}:${currentEndTime.split(':')[1]} ${currentEndTime.split(' ')[1]}`);
                                     }}
                                     className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-1"
                                     required
@@ -279,15 +306,13 @@ const EditForm = ({ params }) => {
                                         </option>
                                     ))}
                                 </select>
-
                                 <span><strong>:</strong></span>
                                 <select
                                     name="endMinute"
                                     value={taskData.endTime.split(':')[1].split(' ')[0]}
                                     onChange={(e) => {
                                         const newMinute = e.target.value;
-                                        const newEndTime = `${taskData.endTime.split(':')[0]}:${newMinute} ${taskData.endTime.split(' ')[1]}`;
-                                        setTaskData({ ...taskData, endTime: newEndTime });
+                                        setCurrentEndTime(`${currentEndTime.split(':')[0]}:${newMinute} ${currentEndTime.split(':')[1].split(' ')[1]}`);
                                     }}
                                     className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
                                     required
@@ -303,8 +328,7 @@ const EditForm = ({ params }) => {
                                     value={taskData.endTime.split(' ')[1]}
                                     onChange={(e) => {
                                         const newAmPm = e.target.value;
-                                        const newEndTime = `${taskData.endTime.split(':')[0]}:${taskData.endTime.split(':')[1].split(' ')[0]} ${newAmPm}`;
-                                        setTaskData({ ...taskData, endTime: newEndTime });
+                                        setCurrentEndTime(`${currentEndTime.split(':')[0]}:${currentEndTime.split(':')[1].split(' ')[0]} ${newAmPm}`);
                                     }}
                                     className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
                                     required
@@ -312,48 +336,39 @@ const EditForm = ({ params }) => {
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
                                 </select>
-
                             </div>
                         </div>
 
 
 
-
-                        <div className="mb-2">
+                        <div className="mb-1">
                             <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
                                 Picture
                             </label>
-                            {taskData.picture && ( // Check if the picture exists in taskData
-                                <div className="mb-1">Current Picture: {taskData.picture}</div>
-                            )}
                             <input
                                 type="file"
                                 id="picture"
                                 accept="image/*"
-                                className="w-full px-4 py-1 border rounded-lg focus:outline-none focus:border-blue-400"
+                                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm" // Adjust the width and text size for mobile and larger screens
                                 onChange={handlePictureChange}
                             />
-
                         </div>
+                            
 
-                        <div className="mb-2">
+                        <div className="mb-1">
                             <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
                                 Audio
                             </label>
-                            {taskData.audio && ( // Check if the audio exists in taskData
-                            <div className="mb-1">Current Audio:{taskData.audio}</div>
-                        )}
                             <input
                                 type="file"
                                 id="audio"
                                 accept="audio/*"
-                                className="w-full px-4 py-1 border rounded-lg focus:outline-none focus:border-blue-400"
+                                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm" // Adjust the width and text size for mobile and larger screens
                                 onChange={handleAudioChange}
                             />
-
                         </div>
-
-
+                            
+                            
                         <button
                             type="submit"
                             className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mb-4"
