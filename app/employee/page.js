@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import NavSideSuper from '../components/NavSideSuper';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash, faEnvelope } from "@fortawesome/free-solid-svg-icons";
+
 
 const initialFormData = {
     name: '',
@@ -17,11 +20,16 @@ const initialFormData = {
 const EmployeeRegistration = () => {
     const [formData, setFormData] = useState(initialFormData);
     const [successMessage, setSuccessMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
 
     const [adminCompanies, setAdminCompanies] = useState([]);
     const [error, setError] = useState(null);
     const router = useRouter();
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     useEffect(() => {
         // Fetch the list of admin's companies from the API
@@ -68,35 +76,36 @@ const EmployeeRegistration = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         try {
-          const response = await axios.post('http://localhost:5000/api/employee/register', formData);
-    
-          if (response.status === 201) {
-            setFormData({
-              name: '',
-              email: '',
-              password: '',
-              adminCompanyName: '',
-              phoneNumber: '',
-            });
-            setSuccessMessage('Admin added successfully.');
-    
-            const { email, password, phoneNumber } = formData;
-            const message = `*Welcome! You appointed as Admin for Followup Application*%0A%0A*Username:* ${email}%0A*Password:* ${password}`;
-            const whatsappWebURL = `https://web.whatsapp.com/send?phone=${phoneNumber}\n&text=${message}`;
-    
-            window.open(whatsappWebURL, '_blank');
-            router.push('/empList');
-          }
+            const response = await axios.post('http://localhost:5000/api/employee/register', formData);
+
+            if (response.status === 201) {
+                setFormData({
+                    name: '',
+                    email: '',
+                    password: '',
+                    adminCompanyName: '',
+                    phoneNumber: '',
+                });
+                setSuccessMessage('Admin added successfully.');
+
+                const { email, password, phoneNumber } = formData;
+                const link = 'http://localhost:3000/employeeLogin'
+                const message = `*Welcome! You appointed as Admin for Followup Application*%0A%0A*Username:* ${email}%0A*Password:* ${password}%0A*Login:* ${link}`;
+                const whatsappWebURL = `https://web.whatsapp.com/send?phone=${phoneNumber}\n&text=${message}`;
+
+                window.open(whatsappWebURL, '_blank');
+                router.push('/empList');
+            }
         } catch (err) {
-          if (err.response) {
-            setError(err.response.data.error);
-          } else {
-            setError('An error occurred while registering the employee.');
-          }
+            if (err.response) {
+                setError(err.response.data.error);
+            } else {
+                setError('An error occurred while registering the employee.');
+            }
         }
-      };
+    };
 
     return (
         <>
@@ -106,7 +115,7 @@ const EmployeeRegistration = () => {
                     <h2 className="text-sm md:text-2xl font-semibold text-center text-orange-500 -mt-3">Admin Registration</h2>
                     <form onSubmit={handleSubmit} className="mt-2 space-y-4">
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Name:</label>
+                            <label className="block text-xs md:text-sm font-medium">Name <span className="text-red-500 text-md">*</span></label>
                             <input
                                 type="text"
                                 name="name"
@@ -118,7 +127,7 @@ const EmployeeRegistration = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Phone Number:</label>
+                            <label className="block text-xs md:text-sm font-medium">Phone Number<span className="text-red-500 text-md">*</span></label>
                             <input
                                 type="text"
                                 name="phoneNumber"
@@ -129,7 +138,7 @@ const EmployeeRegistration = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Email:</label>
+                            <label className="block text-xs md:text-sm font-medium">Email <span className="text-red-500 text-md">*</span></label>
                             <input
                                 type="email"
                                 name="email"
@@ -141,20 +150,31 @@ const EmployeeRegistration = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Password:</label>
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder='********'
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-4 py-1 md:py-2 border rounded-md focus:ring focus:ring-indigo-400 text-xs md:text-sm"
-                            />
+                            <label className="block text-xs md:text-sm font-medium">Password <span className="text-red-500 text-md">*</span></label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    name="password"
+                                    placeholder="********"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-1 md:py-2 border rounded-md focus:ring focus:ring-indigo-400 text-xs md:text-sm"
+                                />
+                                <span
+                                    className="absolute right-3 top-2 cursor-pointer"
+                                    onClick={togglePasswordVisibility}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={showPassword ? faEye : faEyeSlash}
+                                        className='text-gray-600'
+                                    />
+                                </span>
+                            </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Select Company Name:</label>
+                            <label className="block text-xs md:text-sm font-medium">Select Company Name<span className="text-red-500 text-md">*</span></label>
                             <select
                                 name="adminCompanyName"
                                 value={formData.adminCompanyName}

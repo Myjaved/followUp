@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
-import AdminSidebar from '../components/AdminSidebar';
 import NavSide from '../components/NavSide';
+import Image from 'next/image';
 
 const LeadList = () => {
   const [leads, setLeads] = useState([]);
@@ -17,11 +15,19 @@ const LeadList = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
-
   const [searchQuery, setSearchQuery] = useState('');
-
-
   const [editedLead, setEditedLead] = useState(null);
+
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [completeImageUrl, setPreviewImageUrl] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Adjust the number of items per page
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * itemsPerPage + 1;
+  };
+
 
   const handleEditSave = async () => {
     try {
@@ -119,6 +125,20 @@ const LeadList = () => {
     );
   });
 
+  const handlePicturePreview = (imageUrl) => {
+    const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
+    console.log(completeImageUrl)
+    setPreviewImageUrl(completeImageUrl);
+    setIsPreviewModalOpen(true);
+  };
+
+  const indexOfLastLead = currentPage * itemsPerPage;
+  const indexOfFirstLead = indexOfLastLead - itemsPerPage;
+  const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <>
@@ -150,9 +170,9 @@ const LeadList = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredLeads.map((lead, index) => (
+              {currentLeads.map((lead, index) => (
                 <tr key={lead._id}>
-                  <td className="border border-gray-200 p-3 text-center">{index + 1}</td>
+                  <td className="border border-gray-200 p-3 text-center">{calculateSerialNumber(index)}</td>
                   <td className="border border-gray-200 p-3">{lead.customerName}</td>
                   {/* <td className="border border-gray-200 p-3">{lead.companyName}</td> */}
                   <td className="border border-gray-200 p-3">{lead.description}</td>
@@ -175,29 +195,27 @@ const LeadList = () => {
                       onClick={() => handleViewClick(lead)}
                     />
 
-                    {/* <button
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
-                      onClick={() => handleViewClick(lead)}
-                    >
-                      View
-                    </button>
-                    <button
-                      className="bg-yellow-500 hover-bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2"
-                      onClick={() => handleEditClick(lead)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="bg-red-500 hover-bg-red-700 text-white font-bold py-2 px-4 rounded"
-                      onClick={() => handleDeleteLead(lead._id)}
-                    >
-                      Delete
-                    </button> */}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="flex justify-center items-center mt-4">
+            {filteredLeads.length > itemsPerPage && (
+              <ul className="flex justify-center mt-3">
+                {Array.from({ length: Math.ceil(filteredLeads.length / itemsPerPage) }, (_, i) => (
+                  <li key={i}>
+                    <button
+                      onClick={() => paginate(i + 1)}
+                      className={`mx-1 px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-red-700 text-white' : 'bg-red-200 text-black'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {isViewModalOpen && (
@@ -225,6 +243,20 @@ const LeadList = () => {
                     <p className="mb-2 text-left text-sm md:text-base">
                       <strong className='pl-2'>Description:</strong> {viewLead.description}
                     </p>
+                    <p className="mb-2 text-left justify-center pl-2">
+                      <strong>Picture:</strong>{" "}
+                      {viewLead.leadPicture ? (
+                        <button
+                          type="button"
+                          className="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
+                          onClick={() => handlePicturePreview(viewLead.leadPicture)}
+                        >
+                          Preview
+                        </button>
+                      ) : (
+                        "Not Added"
+                      )}
+                    </p>
                   </div>
                 )}
                 <button
@@ -232,6 +264,30 @@ const LeadList = () => {
                   className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded mt-4 text-sm md:text-base"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPreviewModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            <div className="modal-container bg-white w-72 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
+              <div className="p-1 text-center">
+                <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>
+                <Image
+                  src={completeImageUrl}
+                  alt="Preview"
+                  width={400}
+                  height={300}
+                />
+                <button
+                  type="button"
+                  className="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded mt-4 mr-2"
+                  onClick={() => setIsPreviewModalOpen(false)}
+                >
+                  Close
                 </button>
               </div>
             </div>
@@ -329,30 +385,30 @@ const LeadList = () => {
 
         {isDeleteModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="modal-container bg-white sm:w-96 sm:p-5 rounded shadow-lg">
-            <div className="p-5 text-center">
-           <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                              </svg>
-            <p className="mb-5  justify-center font-medium
+            <div className="modal-container bg-white sm:w-96 sm:p-5 rounded shadow-lg">
+              <div className="p-5 text-center">
+                <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <p className="mb-5  justify-center font-medium
             "> Delete this lead?</p>
-            <div className="mt-4">
-              <button
-                onClick={handleConfirmDelete}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-4 rounded  text-sm md:text-base"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded text-sm md:text-base"
-              >
-                Cancel
-              </button>
+                <div className="mt-4">
+                  <button
+                    onClick={handleConfirmDelete}
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-4 rounded  text-sm md:text-base"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded text-sm md:text-base"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        </div>
         )}
       </div>
     </>

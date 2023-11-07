@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import NavSideSuper from '../components/NavSideSuper';
+import * as XLSX from 'xlsx';
 
 
 
@@ -33,10 +34,13 @@ const CompanyList = () => {
     // Function to change page
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
+        
     };
 
     const handleSearchInputChange = (e) => {
         setSearchQuery(e.target.value);
+        setCurrentPage(1); // Reset to the first page when search query changes
+
     };
 
     useEffect(() => {
@@ -107,6 +111,45 @@ const CompanyList = () => {
         setEditedCompany(null);
     };
 
+    const exportToExcel = () => {
+        const fileType =
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const fileExtension = '.xlsx';
+    
+        // Get the columns displayed in the table (from the thead)
+        const columns = ['Sr.No.', 'Company Name'];
+    
+        // Filter the companies to include only the displayed columns and search query
+        const filteredCompanies = companies
+            .filter((company) =>
+                company.companyName.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((company) => {
+                return {
+                    'Sr.No.': (companies.indexOf(company) + 1).toString(),
+                    'Company Name': company.companyName,
+                };
+            });
+    
+        const ws = XLSX.utils.json_to_sheet([Object.keys(filteredCompanies[0]), ...filteredCompanies.map(Object.values)]);
+        const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const data = new Blob([excelBuffer], { type: fileType });
+        const fileName = 'company_list' + fileExtension;
+        saveAs(data, fileName);
+    };
+    
+
+    const saveAs = (data, fileName) => {
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        const url = window.URL.createObjectURL(data);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
     return (
         <>
             <NavSideSuper />
@@ -134,6 +177,14 @@ const CompanyList = () => {
                             <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
                             <span className="font-bold">Add New</span> {/* Apply font-bold to the text beside the plus icon */}
                         </button>
+
+                        <button
+                            className="bg-green-700 text-white font-extrabold py-1 md:py-2 px-2 md:px-4 rounded-md md:absolute md:-mt-12 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
+                            onClick={exportToExcel}
+                        >
+                            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-2 font-bold" />
+                            <span className="font-bold">Excel</span>
+                        </button>
                     </div>
 
 
@@ -156,13 +207,13 @@ const CompanyList = () => {
                                             <td className="border px-2 py-2 text-center">
                                                 {(currentPage - 1) * itemsPerPage + index + 1}
                                             </td>
-                                            <td className="border px-2 py-2 text-center">{company.companyName}</td>
+                                            <td className="border px-2 py-2 text-center font-bold">{company.companyName}</td>
                                             <td className="border px-2 py-2 text-center">
                                                 <FontAwesomeIcon icon={faPenToSquare}
                                                     className="text-orange-500 hover:underline mr-1 cursor-pointer text-lg"
                                                     onClick={() => handleEditClick(company._id)} />
                                                 <FontAwesomeIcon icon={faTrash}
-                                                    className="text-orange-500 hover:underline mr-1 pl-3 cursor-pointer text-lg"
+                                                    className="text-orange-500 hover:underline mr-1 pl-5 cursor-pointer text-lg"
                                                     onClick={() => handleDeleteClick(company._id)}
                                                 />
                                             </td>

@@ -5,6 +5,8 @@ import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faTrash, faEye, faSpinner, faShareNodes, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 import NavSideEmp from '../components/NavSideEmp';
+import Image from 'next/image';
+
 
 const LeadListEmp = () => {
   const [leads, setLeads] = useState([]);
@@ -14,6 +16,8 @@ const LeadListEmp = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [completeImageUrl, setPreviewImageUrl] = useState('');
 
 
   const [editedLead, setEditedLead] = useState(null);
@@ -51,6 +55,7 @@ const LeadListEmp = () => {
             Authorization: token,
           },
         });
+        console.log(response.data)
         setLeads(response.data);
       } catch (error) {
         console.error('Error fetching leads:', error);
@@ -100,7 +105,12 @@ const LeadListEmp = () => {
     setIsDeleteModalOpen(true);
   };
 
-
+  const handlePicturePreview = (imageUrl) => {
+    const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
+    console.log(completeImageUrl)
+    setPreviewImageUrl(completeImageUrl);
+    setIsPreviewModalOpen(true);
+  };
   return (
     <>
       <NavSideEmp />
@@ -179,6 +189,20 @@ const LeadListEmp = () => {
                     <p className="mb-2 text-left justify-center">
                       <strong>Description:</strong> {viewLead.description}
                     </p>
+                    <p className="mb-2 text-left justify-center">
+                      <strong>Picture:</strong>{" "}
+                      {viewLead.leadPicture ? (
+                        <button
+                          type="button"
+                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
+                          onClick={() => handlePicturePreview(viewLead.leadPicture)}
+                        >
+                          Preview
+                        </button>
+                      ) : (
+                        "Not Added"
+                      )}
+                    </p>
                   </div>
                 )}
                 <button
@@ -186,6 +210,31 @@ const LeadListEmp = () => {
                   className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded mt-4"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {isPreviewModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            <div className="modal-container bg-white w-72 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
+              <div className="p-1 text-center">
+                <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>
+                <Image
+                  src={completeImageUrl}
+                  alt="Preview"
+                  width={400}
+                  height={300}
+                />
+                <button
+                  type="button"
+                  className="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded mt-4 mr-2"
+                  onClick={() => setIsPreviewModalOpen(false)}
+                >
+                  Close
                 </button>
               </div>
             </div>

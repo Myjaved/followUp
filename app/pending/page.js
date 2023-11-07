@@ -18,6 +18,14 @@ const PendingTasks = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredTasks, setFilteredTasks] = useState([]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [tasksPerPage] = useState(15); // Define tasks to show per page
+
+    const calculateSerialNumber = (index) => {
+        return index + (currentPage - 1) * tasksPerPage + 1;
+    };
+    
+
     useEffect(() => {
         setFilteredTasks(tasks);
     }, [tasks]);
@@ -37,6 +45,12 @@ const PendingTasks = () => {
     useEffect(() => {
         applySearchFilter();
     }, [searchQuery]);
+
+    const indexOfLastTask = currentPage * tasksPerPage;
+    const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+    const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+    const paginate = pageNumber => setCurrentPage(pageNumber);
 
 
     const handleSearchInputChange = (event) => {
@@ -155,9 +169,9 @@ const PendingTasks = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTasks.map((task, index) => (
+                                {currentTasks.map((task, index) => (
                                     <tr key={task._id}>
-                                        <td className="border px-4 py-2 text-center">{index + 1}</td>
+                                        <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                                         <td className="border px-4 py-2 text-center text-orange-600 font-semibold">
                                             {task.title}
                                         </td>
@@ -176,6 +190,19 @@ const PendingTasks = () => {
                                 ))}
                             </tbody>
                         </table>
+                        <ul className="flex justify-center items-center mt-4">
+                            {Array.from({ length: Math.ceil(filteredTasks.length / tasksPerPage) }, (_, index) => (
+                                <li key={index} className="px-3 py-2">
+                                    <button
+                                        onClick={() => paginate(index + 1)}
+                                        className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                                            } px-4 py-2 rounded`}
+                                    >
+                                        {index + 1}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                 )}
             </div>

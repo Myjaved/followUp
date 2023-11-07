@@ -76,11 +76,14 @@ const EmployeeLoginForm = () => {
                                 width={80}
                                 height={80}
                             />
+
                         </div>
                         <h2 className="text-lg md:text-2xl font-semibold text-center">Admin Login</h2>
                         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium">Email:</label>
+                                <label className="block text-sm font-medium">
+                                    Email<span className="text-red-500 pl-1">*</span>
+                                </label>
                                 <div className="relative">
                                     <input
                                         type="email"
@@ -97,7 +100,9 @@ const EmployeeLoginForm = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium">Password:</label>
+                                <label className="block text-sm font-medium">
+                                    Password<span className="text-red-500 pl-1">*</span>
+                                </label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? 'text' : 'password'}

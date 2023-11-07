@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import NavSide from '@/app/components/NavSide';
+import Image from 'next/image'; // Import the Image component from 'next/image'
 
 
 const EditForm = ({ params }) => {
@@ -16,6 +17,8 @@ const EditForm = ({ params }) => {
     const [subemployees, setSubemployees] = useState([]);
     const [pictureFile, setPictureFile] = useState(null); // State for the new picture file
     const [audioFile, setAudioFile] = useState(null); // State for the new audio file
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [completeImageUrl, setPreviewImageUrl] = useState('');
 
     useEffect(() => {
         // Fetch task data by taskId when the component mounts
@@ -29,7 +32,11 @@ const EditForm = ({ params }) => {
                     },
                 });
                 if (response.status === 200) {
-                    setTaskData(response.data);
+                    const retrievedTaskData = response.data;
+                    if (retrievedTaskData.audio && typeof retrievedTaskData.audio === 'object') {
+                        retrievedTaskData.audio = retrievedTaskData.audio.name; // Or another property name that holds the audio file name
+                    }
+                    setTaskData(retrievedTaskData);
                 } else {
                     console.error('Failed to fetch task data');
                 }
@@ -71,45 +78,56 @@ const EditForm = ({ params }) => {
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
-        
+
         const formData = new FormData();
         formData.append('taskData', JSON.stringify(taskData));
         formData.append('picture', pictureFile); // Assuming pictureFile holds the file object
-        console.log(pictureFile)
-      
-        try {
-          const authToken = localStorage.getItem('authToken');
-          
-          const response = await fetch(`http://localhost:5000/api/task/edit/${taskId}`, {
-            method: 'PUT',
-            headers: {
-              Authorization: authToken,
-            },
-            body: formData, // Set the form data here
-          });
-      
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Task updated successfully:', data);
-            router.push(`/taskList`);
-          } else {
-            console.error('Failed to update task');
-          }
-        } catch (error) {
-          console.error('Error:', error);
+        if (audioFile) {
+            formData.append('audio', audioFile); // Assuming 'audio' is the key name on the server for audio files
         }
-      };
+        console.log(pictureFile)
 
+        try {
+            const authToken = localStorage.getItem('authToken');
+
+            const response = await fetch(`http://localhost:5000/api/task/edit/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: authToken,
+                },
+                body: formData, // Set the form data here
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Task updated successfully:', data);
+                router.push(`/taskList`);
+            } else {
+                console.error('Failed to update task');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
+    const handlePicturePreview = (imageUrl) => {
+        const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
+        console.log(completeImageUrl)
+        setPreviewImageUrl(completeImageUrl);
+        setIsPreviewModalOpen(true);
+    };
 
     const handlePictureChange = (e) => {
         // Set the selected picture file in the state
         setPictureFile(e.target.files[0]);
     };
 
-
     const handleAudioChange = (e) => {
         // Set the selected audio file in the state
-        setAudioFile(e.target.files[0]);
+        const newAudioFile = e.target.files[0];
+        setAudioFile(newAudioFile);
+        // Update taskData with the new audio file
+        setTaskData({ ...taskData, audio: newAudioFile.name });
     };
 
 
@@ -120,7 +138,7 @@ const EditForm = ({ params }) => {
     return (
         <>
             <NavSide />
-            <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
+            <div className="w-full md:flex justify-center items-center min-h-screen md:mt-5 md:pl-28 bg-slate-50">
                 <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white mt-16">
                     {successMessage && (<div className="mb-4 text-green-500">{successMessage}</div>)}
                     <div className=" col-span-2 mb-3 md:text-2xl font-bold text-orange-500 text-left">Edit Task</div>
@@ -319,7 +337,7 @@ const EditForm = ({ params }) => {
 
 
 
-                        <div className="mb-2">
+                        {/* <div className="mb-2">
                             <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
                                 Picture
                             </label>
@@ -334,15 +352,54 @@ const EditForm = ({ params }) => {
                                 onChange={handlePictureChange}
                             />
 
+                        </div> */}
+                        <div className="mb-2">
+                            {/* <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
+                                Picture
+                            </label>
+                            {taskData.picture && (
+                                <div className="mb-1">
+                                    Current Picture: {taskData.picture}
+                                    <button
+                                        onClick={() => window.open(`http://localhost:5000/${taskData.picture}`)}
+                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg ml-4"
+                                    >
+                                        Preview
+                                    </button>
+                                </div>
+                            )} */}
+                            <p className="mb-2 text-left justify-center">
+                                <strong>Picture:</strong>{" "}
+                                {taskData.picture ? (
+                                    <button
+                                        type="button"
+                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mt-1 ml-2"
+                                        onClick={() => handlePicturePreview(taskData.picture)}
+                                    >
+                                        Preview
+                                    </button>
+                                ) : (
+                                    "Not Added"
+                                )}
+                            </p>
+                            <input
+                                type="file"
+                                id="picture"
+                                accept="image/*"
+                                className="w-full px-4 py-1 border rounded-lg focus:outline-none focus:border-blue-400"
+                                onChange={handlePictureChange}
+                            />
                         </div>
 
-                        <div className="mb-2">
+
+
+                        {/* <div className="mb-2">
                             <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
                                 Audio
                             </label>
-                            {taskData.audio && ( // Check if the audio exists in taskData
-                            <div className="mb-1">Current Audio:{taskData.audio}</div>
-                        )}
+                            {taskData.audio && (
+                                <div className="mb-1">Current Audio: {taskData.audio}</div>
+                            )}
                             <input
                                 type="file"
                                 id="audio"
@@ -350,7 +407,54 @@ const EditForm = ({ params }) => {
                                 className="w-full px-4 py-1 border rounded-lg focus:outline-none focus:border-blue-400"
                                 onChange={handleAudioChange}
                             />
+                        </div> */}
 
+                        {isPreviewModalOpen && (
+                            <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                                <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                                    <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={() => setIsPreviewModalOpen(false)}></button>
+                                    <div className="p-1 text-center">
+                                        <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Image Preview</h3>
+                                        <Image
+                                            src={completeImageUrl}
+                                            alt="Preview"
+                                            width={400}
+                                            height={300}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded mt-4 mr-2"
+                                            onClick={() => setIsPreviewModalOpen(false)}
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mb-2">
+                            <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
+                                Audio
+                            </label>
+                            <p className="mb-2 text-left flex item-center">
+                                {taskData.audio ? (
+                                    <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'>
+                                        <source src={`http://localhost:5000/${taskData.audio}`} type="audio/mp3" />
+                                        Your browser does not support the audio element.
+                                    </audio>
+
+                                ) : (
+                                    "Not Added"
+                                )}
+                            </p>
+                            <input
+                                type="file"
+                                id="audio"
+                                accept="audio/*"
+                                className="w-full px-4 py-1 border rounded-lg focus:outline-none focus:border-blue-400"
+                                onChange={handleAudioChange}
+                            />
                         </div>
 
 

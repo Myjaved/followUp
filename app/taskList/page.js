@@ -4,12 +4,23 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleExclamation,faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
+import { faCircleExclamation, faPenToSquare, faTrash, faEye, faSpinner, faShareNodes, faPlus ,faFileExcel} from '@fortawesome/free-solid-svg-icons';
 import { format, parse, isBefore } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
+import * as XLSX from 'xlsx';
 
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -62,12 +73,13 @@ const ShareButton = ({ task }) => {
   return (
     <button
       onClick={handleShareClick}
-      className="text-green-800 hover:underline cursor-pointer"
+      className="text-green-800 hover:underline cursor-pointer -mr-2"
     >
       <FontAwesomeIcon icon={faShareNodes} />
     </button>
   );
 };
+const itemsPerPage = 15; // Number of items to display per page
 
 const PendingTasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -79,9 +91,31 @@ const PendingTasks = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
 
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+
+  const getTasksForCurrentPage = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const tasksToDisplay = filteredTasks.slice(startIndex, endIndex);
+
+    if (tasksToDisplay.length === 0 && filteredTasks.length > 0) {
+      return filteredTasks.slice(0, itemsPerPage); // Show the first page if the current page is empty
+    }
+
+    return tasksToDisplay;
+  };
 
   let serialNumber = 1;
 
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * itemsPerPage + 1;
+  };
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTasks, setFilteredTasks] = useState([]);
   const router = useRouter()
@@ -98,64 +132,6 @@ const PendingTasks = () => {
     setSearchQuery(event.target.value);
   };
 
-  // useEffect(() => {
-  //   const fetchAllTasks = async () => {
-  //     try {
-  //       const token = localStorage.getItem('authToken');
-  //       const response = await axios.get('http://localhost:5000/api/task/list', {
-  //         headers: {
-  //           Authorization: token,
-  //         },
-  //       });
-
-  //       if (response.status === 200) {
-  //         if (Array.isArray(response.data.tasks)) {
-  //           const currentDate = new Date();
-  //           const tasksWithAssignedNames = await Promise.all(
-  //             response.data.tasks.map(async (task) => {
-  //               const employeeResponse = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
-  //                 headers: {
-  //                   Authorization: token,
-  //                 },
-  //               });
-
-  //               if (employeeResponse.status === 200) {
-  //                 task.assigneeName = employeeResponse.data.name;
-  //               }
-
-  //               task.startDate = formatDate(task.startDate);
-  //               const formattedDeadlineDate = format(new Date(task.deadlineDate), 'dd/MM/yyyy');
-  //               task.deadlineDate = parse(formattedDeadlineDate, 'dd/MM/yyyy', new Date());
-
-  //               // Check if the task is completed or overdue
-  //               if (task.status === 'completed') {
-  //                 // Task is completed, no need to check deadline
-  //               } else if (isBefore(task.deadlineDate, currentDate)) {
-  //                 task.status = 'overdue';
-  //               } else {
-  //                 task.status = 'pending';
-  //               }
-
-  //               return task;
-  //             })
-  //           );
-
-  //           setTasks(tasksWithAssignedNames);
-  //         } else {
-  //           console.error('API response is not an array:', response.data);
-  //         }
-  //       } else {
-  //         console.error('Failed to fetch tasks');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchAllTasks();
-  // }, []);
 
   useEffect(() => {
     const fetchAllTasks = async () => {
@@ -166,7 +142,7 @@ const PendingTasks = () => {
             Authorization: token,
           },
         });
-  
+
         if (response.status === 200) {
           if (Array.isArray(response.data.tasks)) {
             const currentDate = new Date();
@@ -178,7 +154,7 @@ const PendingTasks = () => {
                       Authorization: token,
                     },
                   });
-  
+
                   if (employeeResponse.status === 200) {
                     task.assigneeName = employeeResponse.data.name;
                   }
@@ -186,11 +162,11 @@ const PendingTasks = () => {
                   // If the employee is not found, set assigneeName as 'Employee Not Found'
                   task.assigneeName = 'Employee Not Found';
                 }
-  
+
                 task.startDate = formatDate(task.startDate);
                 const formattedDeadlineDate = format(new Date(task.deadlineDate), 'dd/MM/yyyy');
                 task.deadlineDate = parse(formattedDeadlineDate, 'dd/MM/yyyy', new Date());
-  
+
                 // Check if the task is completed or overdue
                 if (task.status === 'completed') {
                   // Task is completed, no need to check deadline
@@ -199,11 +175,11 @@ const PendingTasks = () => {
                 } else {
                   task.status = 'pending';
                 }
-  
+
                 return task;
               })
             );
-  
+
             setTasks(tasksWithAssignedNames);
           } else {
             console.error('API response is not an array:', response.data);
@@ -217,7 +193,7 @@ const PendingTasks = () => {
         setLoading(false);
       }
     };
-  
+
     fetchAllTasks();
   }, []);
 
@@ -296,7 +272,7 @@ const PendingTasks = () => {
           taskData.assigneeName = employeeResponse.data.name;
         }
 
-        console.log('Picture URL:',taskData.picture)
+        console.log('Picture URL:', taskData.picture)
         console.log('Audio URL:', taskData.audio);
 
 
@@ -310,10 +286,64 @@ const PendingTasks = () => {
     }
   };
 
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+    const employeeNames = {}; // A map to store employee names
+
+    // Fetch employee names
+    await Promise.all(
+      tasks.map(async (task) => {
+        if (!employeeNames[task.assignTo]) {
+          try {
+            const token = localStorage.getItem('authToken');
+            const response = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
+              headers: {
+                Authorization: token,
+              },
+            });
+
+            if (response.status === 200) {
+              employeeNames[task.assignTo] = response.data.name;
+            }
+          } catch (error) {
+            console.error(`Error fetching employee name for ID ${task.assignTo}:`, error);
+          }
+        }
+      })
+    );
+
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredTasks.map(task => {
+      return {
+        'Title': task.title,
+        'Status': task.status,
+        'StartDate': task.startDate,
+        'DeadLine': task.deadlineDate,
+        'AssignTo': employeeNames[task.assignTo] || task.assignTo, // Assign the name if available, otherwise use the ID
+      };
+    });
+
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'All_Task_list' + fileExtension;
+    saveAs(data, fileName);
+  };
+
   return (
     <>
       <NavSide />
-    
+
       <div className="m-5 pl-0 md:pl-64 mt-20">
         <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">All Tasks</h1>
         <div className="flex justify-center items-center mb-4">
@@ -327,17 +357,28 @@ const PendingTasks = () => {
         </div>
 
 
-        <div className="relative mb-16 md:mb-16">
+        <div className="relative mb-16 md:mb-16 md:-mt-10">
           <button
-            className="bg-orange-500 text-white font-bold py-1 px-5 md:px-7 rounded-lg absolute top-2 right-3"
+            className="bg-green-500 text-white font-bold py-1 px-5 md:px-4 rounded-lg absolute top-2 right-3 md:right-0"
             onClick={() => router.push('/taskForm')}
           >
-            Add Task
+            <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Add New</span>
           </button>
         </div>
 
-        
-        {loading ? (          
+        <div className="relative mb-7 md:mb-14">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
+
+        {/* <button onClick={() => exportToExcel(filteredTasks)}>Export to Excel</button> */}
+
+        {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
               icon={faSpinner}
@@ -346,9 +387,10 @@ const PendingTasks = () => {
             />
           </div>
         ) : (
+
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto">
-              <thead className='bg-orange-400 text-white'>
+              <thead className='bg-orange-500 text-white'>
                 <tr>
                   <th className="px-4 py-2 text-center">Sr.No.</th>
                   <th className="px-4 py-2 text-center">Title</th>
@@ -360,10 +402,10 @@ const PendingTasks = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTasks.map((task) => (
+                {getTasksForCurrentPage().map((task, index) => (
                   <tr key={task._id} className="hover:bg-gray-100">
-                    <td className="border px-4 py-2 text-center">{serialNumber++}</td>
-                    <td className="border px-4 py-2">{task.title}</td>
+                    <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
+                    <td className="border px-4 py-2 font-semibold">{task.title}</td>
                     <td className="text-center border px-2 py-1">
                       <span className={`rounded-full font-semibold px-5 py-1 ${task.status === 'completed' ? 'text-green-800 bg-green-200' :
                         task.status === 'overdue' ? 'text-red-800 bg-red-200' :
@@ -378,6 +420,11 @@ const PendingTasks = () => {
                     <td className="border px-4 py-2">{task.assigneeName}</td>
                     <td className="border px-4 py-2">
                       <FontAwesomeIcon
+                        icon={faEye}
+                        className="text-blue-500 hover:underline mr-3 cursor-pointer"
+                        onClick={() => handleViewClick(task._id)}
+                      />
+                      <FontAwesomeIcon
                         icon={faPenToSquare}
                         className="text-orange-500 hover:underline mr-3 cursor-pointer"
                         onClick={() => handleEdit(task._id)}
@@ -387,24 +434,32 @@ const PendingTasks = () => {
                         className="text-red-500 hover:underline mr-3 cursor-pointer"
                         onClick={() => handleDeleteClick(task._id)}
                       />
-                      <FontAwesomeIcon
-                        icon={faEye}
-                        className="text-blue-500 hover:underline mr-3 cursor-pointer"
-                        onClick={() => handleViewClick(task._id)}
-                      />
+
                       <ShareButton task={task} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="flex justify-center mt-4">
+              {Array.from({ length: Math.ceil(filteredTasks.length / itemsPerPage) }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-4 py-1 mx-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'
+                    }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
         {isViewModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
             <div className="modal-container bg-white w-72 md:w-96 sm:p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
-              
+
               <div className="p-2 text-center text-sm md:text-base">
                 <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-400 text-center">Task Details</h3>
                 {viewTask && (
@@ -444,11 +499,11 @@ const PendingTasks = () => {
                         "Not Added"
                       )}
                     </p>
-                    
+
                     <p className="mb-2 text-left flex item-center">
                       <span className='mr-1 '><strong>Audio:</strong></span>{" "}
                       {viewTask.audio ? (
-                        <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'> 
+                        <audio controls className='w-64 h-8 md:w-96 md-h-10 text-lg'>
                           <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
                           Your browser does not support the audio element.
                         </audio>

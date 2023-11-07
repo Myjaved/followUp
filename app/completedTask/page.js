@@ -4,10 +4,22 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faEye, faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
+import * as XLSX from 'xlsx';
 
+
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 const CompletedTaskList = () => {
   const [completedTasks, setCompletedTasks] = useState([]);
@@ -20,11 +32,15 @@ const CompletedTaskList = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for Edit Task modal
-
-
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTasks, setFilteredTasks] = useState([]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 10; // Number of tasks to display per page
+
+  const calculateSerialNumber = (index) => {
+    return index + 1 + (currentPage - 1) * tasksPerPage;
+  };
 
 
   const handlePicturePreview = (imageUrl) => {
@@ -55,6 +71,8 @@ const CompletedTaskList = () => {
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
+    setCurrentPage(1); // Reset to the first page when performing a search
+
   };
 
   useEffect(() => {
@@ -112,6 +130,16 @@ const CompletedTaskList = () => {
 
     setFilteredTasks(filtered);
   }, [searchQuery, completedTasks]);
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  // Handlers for navigating pages
+  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
 
 
@@ -205,6 +233,69 @@ const CompletedTaskList = () => {
     setViewModalOpen(true);
   };
 
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+    const employeeNames = {}; // A map to store employee names
+
+    // Fetch employee names
+    await Promise.all(
+      filteredTasks.map(async (task) => {
+        if (!employeeNames[task.assignTo]) {
+          try {
+            const token = localStorage.getItem('authToken');
+            const response = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
+              headers: {
+                Authorization: token,
+              },
+            });
+
+            if (response.status === 200) {
+              employeeNames[task.assignTo] = response.data.name;
+            }
+          } catch (error) {
+            console.error(`Error fetching employee name for ID ${task.assignTo}:`, error);
+          }
+        }
+      })
+    );
+
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredTasks.map(task => {
+      const formattedStartDate = formatDate(task.startDate);
+      const formattedDeadline = formatDate(task.deadlineDate);
+
+      return {
+        'Title': task.title,
+        'Status': task.status,
+        'StartDate': formattedStartDate,
+        'DeadLine': formattedDeadline,
+        'AssignTo': employeeNames[task.assignTo] || task.assignTo, // Assign the name if available, otherwise use the ID
+      };
+    });
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${day}-${month}-${year}`; // Change the date format here as needed
+    }
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'All_Task_list' + fileExtension;
+    saveAs(data, fileName);
+  };
   return (
     <>
       <NavSide />
@@ -221,6 +312,14 @@ const CompletedTaskList = () => {
           />
         </div>
 
+        <div className="relative mb-7 md:mb-14">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-2 right-16 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
 
         {loading ? (
 
@@ -233,7 +332,7 @@ const CompletedTaskList = () => {
           </div>
         ) : (
           <div>
-            {completedTasks.length === 0 ? (
+            {currentTasks.length === 0 ? (
               <p className="text-gray-600">No completed tasks found.</p>
             ) : (
               <div className="overflow-x-auto">
@@ -252,9 +351,9 @@ const CompletedTaskList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTasks.map((task, index) => (
+                    {currentTasks.map((task, index) => (
                       <tr key={task._id}>
-                        <td className="border px-4 py-2 text-center">{index + 1}</td>
+                        <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                         <td className="border px-4 py-2">
                           <div>
                             <h2 className="text-base font-medium text-blue-800 text-center">{task.title}</h2>
@@ -293,6 +392,18 @@ const CompletedTaskList = () => {
                 </table>
               </div>
             )}
+
+            <div className="flex justify-center mt-4">
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-4 py-1 mx-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'}`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

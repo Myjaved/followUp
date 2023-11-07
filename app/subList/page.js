@@ -21,10 +21,18 @@ const EmployeeList = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   let serialNumber = 1; // Initialize the serial number
-
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * employeesPerPage + 1;
+  };
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [employeesPerPage] = useState(5); // Change the number as per your preference
 
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
 
   const clearSuccessMessage = () => {
@@ -68,6 +76,11 @@ const EmployeeList = () => {
       employee.adminCompanyName.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
+
+  const indexOfLastEmployee = currentPage * employeesPerPage;
+  const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
+  const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
+
   const handleEditClick = (employeeId) => {
     // Open the edit modal when the "Edit" button is clicked
     setIsEditModalOpen(true);
@@ -206,7 +219,7 @@ const EmployeeList = () => {
           />
         </div>
 
-        <div className="relative mb-10 md:mb-20">
+        <div className="relative mb-10 md:mb-12">
           <button
             className="bg-orange-500 text-white font-bold py-0.5 px-3 rounded-lg absolute top-2 right-1"
             onClick={handleAddClick}
@@ -220,44 +233,60 @@ const EmployeeList = () => {
           <table className="min-w-full table-auto mt-1">
             <thead>
               <tr>
-                <th className="px-4 py-2 text-left text-gray-800">Sr.No.</th>
+                <th className="px-1 py-2 text-center text-gray-800">Sr.No.</th>
                 <th className="px-4 py-2 text-left text-gray-800">Name</th>
                 <th className="px-4 py-2 text-left text-gray-800">Email</th>
                 <th className="px-4 py-2 text-left text-gray-800">Phone Number</th>
-                <th className="px-4 py-2 text-left text-gray-800">Company Name</th>
+                {/* <th className="px-4 py-2 text-left text-gray-800">Company Name</th> */}
                 <th className="px-4 py-2 text-center text-gray-800">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.map((employee) => (
+              {currentEmployees.map((employee,index) => (
                 <tr key={employee._id}>
-                  <td className="border px-4 py-2 text-center">{serialNumber++}</td>
+                  <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                   <td className="border px-4 py-2 text-left">{employee.name}</td>
                   <td className="border px-4 py-2">{employee.email}</td>
                   <td className="border px-4 py-2">{employee.phoneNumber}</td>
-                  <td className="border px-4 py-2">{employee.adminCompanyName}</td>
+                  {/* <td className="border px-4 py-2">{employee.adminCompanyName}</td> */}
                   <td className="border px-4 py-2">
 
+
+                    <FontAwesomeIcon
+                      icon={faEye}
+                      className="text-blue-500 hover:underline cursor-pointer mr-3 pl-6"
+                      onClick={() => handleViewClick(employee._id)}
+                    />
                     <FontAwesomeIcon
                       icon={faPenToSquare}
-                      className="text-orange-500 hover:underline mr-5 cursor-pointer pl-5 "
+                      className="text-orange-500 hover:underline cursor-pointer mr-3"
                       onClick={() => handleEditClick(employee._id)}
                     />
                     <FontAwesomeIcon
                       icon={faTrash}
-                      className="text-red-500 hover:underline mr-5 cursor-pointer pl-5"
+                      className="text-red-500 hover:underline cursor-pointer -mr-16"
                       onClick={() => handleDeleteClick(employee._id)}
-                    />
-                    <FontAwesomeIcon
-                      icon={faEye}
-                      className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5"
-                      onClick={() => handleViewClick(employee._id)}
                     />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {filteredEmployees.length > employeesPerPage && (
+            <div className="flex justify-center mt-3">
+              {Array.from({ length: Math.ceil(filteredEmployees.length / employeesPerPage) }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => paginate(i + 1)}
+                  className={`mx-1 px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-red-700 text-white' : 'bg-red-200 text-black'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+
         </div>
 
         {/* Edit Employee Modal */}
@@ -379,7 +408,7 @@ const EmployeeList = () => {
                   className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-4 py-2 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 mr-2"
                   onClick={closeModal}
                 >
-                 Cancel
+                  Cancel
                 </button>
               </div>
             </div>

@@ -14,9 +14,21 @@ const Overdue = () => {
   const [viewTask, setViewTask] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
-
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTasks, setFilteredTasks] = useState([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(15); // Define tasks to show per page
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  const paginate = pageNumber => setCurrentPage(pageNumber);
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * tasksPerPage + 1;
+  };
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -158,9 +170,9 @@ const Overdue = () => {
               </thead>
               <tbody>
                 {overdueTasks.length > 0 ? (
-                  filteredTasks.map((task, index) => (
+                  currentTasks.map((task, index) => (
                     <tr key={task._id}>
-                      <td className="px-4 py-2 text-center border">{index + 1}</td>
+                      <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                       <td className="px-4 py-2 text-center border">{task.title}</td>
                       <td className="px-4 py-2 text-center border"><span className='px-2 py-1 bg-red-200 text-red-800 rounded-full text-sm'>Overdue</span> </td>
                       <td className="px-4 py-2 text-center border">{task.assignTo}</td>
@@ -189,7 +201,21 @@ const Overdue = () => {
                 )}
               </tbody>
             </table>
+            <ul className="flex justify-center items-center mt-4">
+              {Array.from({ length: Math.ceil(filteredTasks.length / tasksPerPage) }, (_, index) => (
+                <li key={index} className="px-3 py-2">
+                  <button
+                    onClick={() => paginate(index + 1)}
+                    className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}
+                  px-4 py-2 rounded`}
+                  >
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
+
         )}
       </div>
 
@@ -296,304 +322,3 @@ const Overdue = () => {
 };
 
 export default Overdue;
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import Navbar from '../components/Navbar';
-// import Sidebar from '../components/Sidebar';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faEye } from '@fortawesome/free-solid-svg-icons';
-
-// const Overdue = () => {
-//   const [overdueTasks, setOverdueTasks] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [viewModalOpen, setViewModalOpen] = useState(false);
-//   const [selectedTask, setSelectedTask] = useState(null);
-
-//   useEffect(() => {
-//     const fetchOverdueTasks = async () => {
-//       try {
-//         const authToken = localStorage.getItem('authToken');
-
-//         const response = await axios.get('http://localhost:5000/api/task/tasks/overdue', {
-//           headers: {
-//             Authorization: authToken,
-//           },
-//         });
-
-//         if (response.data && response.data.overdueTasks) {
-//           const tasksWithNames = await Promise.all(
-//             response.data.overdueTasks.map(async (task) => {
-//               const assignToNameResponse = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
-//                 headers: {
-//                   Authorization: authToken,
-//                 },
-//               });
-//               const assignToName = assignToNameResponse.data.name;
-//               return {
-//                 ...task,
-//                 assignTo: assignToName,
-//               };
-//             })
-//           );
-
-//           setOverdueTasks(tasksWithNames);
-//         }
-//         setLoading(false);
-//       } catch (error) {
-//         console.error('Error fetching overdue tasks:', error);
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchOverdueTasks();
-//   }, []);
-
-//   const handleViewClick = (taskId) => {
-//     const task = overdueTasks.find((t) => t._id === taskId);
-//     setSelectedTask(task);
-//     setViewModalOpen(true);
-//   };
-
-//   const closeViewModal = () => {
-//     setViewModalOpen(false);
-//   };
-
-//   return (
-//     <>
-//       <Navbar />
-//       <Sidebar />
-//       <div className="container mx-auto m-10 pl-64 mt-20">
-//         <h1 className="text-2xl font-bold mb-4">Overdue Tasks</h1>
-//         {loading ? (
-//           <p>Loading...</p>
-//         ) : (
-//           <div className="overflow-x-auto">
-//             <table className="min-w-full border-collapse table-auto">
-//               <thead>
-//                 <tr>
-//                   <th className="px-4 py-2">Sr. No.</th>
-//                   <th className="px-4 py-2">Title</th>
-//                   <th className="px-4 py-2">Status</th>
-//                   <th className="px-4 py-2">AssignTo</th>
-//                   <th className="px-4 py-2">Started Date</th>
-//                   <th className="px-4 py-2">Deadline Date</th>
-//                   <th className="px-4 py-2 text-left">Actions</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {overdueTasks.length > 0 ? (
-//                   overdueTasks.map((task, index) => (
-//                     <tr key={task._id}>
-//                       <td className="px-4 py-2 text-center border">{index + 1}</td>
-//                       <td className="px-4 py-2 text-center border">{task.title}</td>
-//                       <td className="px-4 py-2 text-center border">Overdue</td>
-//                       <td className="px-4 py-2 text-center border">{task.assignTo}</td>
-//                       <td className="px-4 py-2 text-center border">
-//                         {new Date(task.startDate).toLocaleDateString('en-GB')}
-//                       </td>
-//                       <td className="px-4 py-2 text-center border">
-//                         {new Date(task.deadlineDate).toLocaleDateString('en-GB')}
-//                       </td>
-//                       <td className="border px-12 py-2 text-left">
-//                         <FontAwesomeIcon
-//                           icon={faEye}
-//                           className="text-blue-500 hover:underline cursor-pointer"
-//                           onClick={() => handleViewClick(task._id)}
-//                         />
-//                       </td>
-//                     </tr>
-//                   ))
-//                 ) : (
-//                   <tr>
-//                     <td colSpan="3" className="px-4 py-2 text-center border">
-//                       No overdue tasks found.
-//                     </td>
-//                   </tr>
-//                 )}
-//               </tbody>
-//             </table>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* View Task Modal */}
-//       {viewModalOpen && selectedTask && (
-//         <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
-//           <div className="bg-white p-4 w-1/2 rounded-md">
-//             <h2 className="text-2xl font-semibold mb-4">View Task</h2>
-//             <div>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>AssignedBy:</strong> {selectedTask.assignedBy}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>AssignTo:</strong> {selectedTask.assignTo}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Title:</strong> {selectedTask.title}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Description:</strong> {selectedTask.description}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Status:</strong> {selectedTask.status}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Date:</strong> {selectedTask.startDate}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Start Time:</strong> {selectedTask.startTime}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>DeadLine:</strong> {selectedTask.deadlineDate}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>End Time:</strong> {selectedTask.endTime}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Photo:</strong> {selectedTask.picture}
-//               </p>
-//               <p className="mb-2 text-left justify-center">
-//                 <strong>Audio:</strong> {selectedTask.audio}
-//               </p>
-
-//               <p className='text-center'>
-//                 <button
-//                   className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-//                   onClick={closeViewModal}
-//                 >
-//                   Close
-//                 </button>
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// };
-
-// export default Overdue;
-
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import Navbar from '../components/Navbar';
-// import Sidebar from '../components/Sidebar';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faEye } from '@fortawesome/free-solid-svg-icons';
-
-
-// const Overdue = () => {
-//   const [overdueTasks, setOverdueTasks] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   // Fetch overdue tasks when the component mounts
-//   useEffect(() => {
-//     const fetchOverdueTasks = async () => {
-//       try {
-//         const authToken = localStorage.getItem('authToken');
-
-//         const response = await axios.get('http://localhost:5000/api/task/tasks/overdue', {
-//           headers: {
-//             Authorization: authToken,
-//           },
-//         });
-
-//         if (response.data && response.data.overdueTasks) {
-//           // Map assignTo IDs to names
-//           const tasksWithNames = await Promise.all(
-//             response.data.overdueTasks.map(async (task) => {
-//               const assignToNameResponse = await axios.get(`http://localhost:5000/api/subemployee/${task.assignTo}`, {
-//                 headers: {
-//                   Authorization: authToken, // Include Authorization header for employee request
-//                 },
-//               });
-//               const assignToName = assignToNameResponse.data.name;
-//               return {
-//                 ...task,
-//                 assignTo: assignToName,
-//               };
-//             })
-//           );
-//           console.log(tasksWithNames)
-//           setOverdueTasks(tasksWithNames);
-//         }
-//         setLoading(false);
-//       } catch (error) {
-//         console.error('Error fetching overdue tasks:', error);
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchOverdueTasks();
-//   }, []);
-
-//   return (
-//     <>
-//       <Navbar />
-//       <Sidebar />
-//       <div className="container mx-auto m-10 pl-64 mt-20">
-//         <h1 className="text-2xl font-bold mb-4">Overdue Tasks</h1>
-//         {loading ? (
-//           <p>Loading...</p>
-//         ) : (
-//           <div className="overflow-x-auto">
-//             <table className="min-w-full border-collapse table-auto">
-//               <thead>
-//                 <tr>
-//                   <th className="px-4 py-2">Sr. No.</th>
-//                   <th className="px-4 py-2">Title</th>
-//                   <th className="px-4 py-2">Status</th>
-//                   <th className="px-4 py-2">AssignTo</th>
-//                   {/* <th className="px-4 py-2">Description</th> */}
-//                   <th className="px-4 py-2">Started Date</th>
-//                   <th className="px-4 py-2">Deadline Date</th>
-//                   <th className="px-4 py-2 text-left">Actions</th>
-//                   {/* Add more table headers as needed */}
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {overdueTasks.length > 0 ? (
-//                   overdueTasks.map((task, index) => (
-//                     <tr key={task._id}>
-//                       <td className="px-4 py-2 text-center border">{index + 1}</td>
-//                       <td className="px-4 py-2 text-center border">{task.title}</td>
-//                       <td className="px-4 py-2 text-center border">Overdue</td>
-//                       <td className="px-4 py-2 text-center border">{task.assignTo}</td>
-//                       {/* <td className="px-4 py-2 border">{task.description}</td> */}
-//                       <td className="px-4 py-2 text-center border">
-//                         {new Date(task.startDate).toLocaleDateString('en-GB')}
-//                       </td>
-//                       <td className="px-4 py-2 text-center border">
-//                         {new Date(task.deadlineDate).toLocaleDateString('en-GB')}
-//                       </td>
-//                       <td className="border px-12 py-2 text-left">
-
-//                         <FontAwesomeIcon
-//                           icon={faEye}
-//                           className="text-blue-500 hover:underline cursor-pointer"
-//                           onClick={() => handleViewClick(task._id)}
-//                         />
-//                       </td>
-//                     </tr>
-//                   ))
-//                 ) : (
-//                   <tr>
-//                     <td colSpan="3" className="px-4 py-2 text-center border">
-//                       No overdue tasks found.
-//                     </td>
-//                   </tr>
-//                 )}
-//               </tbody>
-//             </table>
-//           </div>
-//         )}
-//       </div>
-//     </>
-//   );
-// };
-
-// export default Overdue;

@@ -6,8 +6,9 @@ import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { faEye } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faFileExcel, faPlus } from '@fortawesome/free-solid-svg-icons';
 import NavSideSuper from '../components/NavSideSuper';
+import * as XLSX from 'xlsx';
 
 
 const EmployeeList = () => {
@@ -19,16 +20,31 @@ const EmployeeList = () => {
     const [editedEmployee, setEditedEmployee] = useState({});
     const [viewEmployeeData, setViewEmployeeData] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false); // State to control the view modal
-
-    const itemsPerPage = 7; // Number of items to show per page
     const [currentPage, setCurrentPage] = useState(1);
-
     const [companies, setCompanies] = useState([]); // State to store the list of companies
-
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+
+
+
+    const itemsPerPage = 9; // Number of items to show per page
 
     const router = useRouter();
+
+    const handleSearch = (event) => {
+        setSearchQuery(event.target.value);
+    };
+
+    const filteredEmployees = employees.filter((employee) => {
+        return (
+            employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            employee.phoneNumber.includes(searchQuery) ||
+            employee.adminCompanyName.toLowerCase().includes(searchQuery.toLowerCase()) // Include company name in search
+
+        );
+    });
 
 
 
@@ -58,11 +74,10 @@ const EmployeeList = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentEmployees = employees.slice(indexOfFirstItem, indexOfLastItem);
+    const displayEmployees = searchQuery ? filteredEmployees : currentEmployees;
+
 
     useEffect(() => {
-        // Fetch the list of employees from your API endpoint
-        // Make sure to add pagination logic in your API (to fetch specific employee range based on page number)
-        // Use pagination parameters in the API endpoint to fetch limited employee records
         fetch(`http://localhost:5000/api/employee/list?page=${currentPage}&limit=${itemsPerPage}`)
             .then((response) => response.json())
             .then((data) => {
@@ -72,19 +87,6 @@ const EmployeeList = () => {
                 console.error('Error fetching employees:', error);
             });
     }, [currentPage]); // Trigger this effect whenever the currentPage changes
-
-
-    // useEffect(() => {
-    //     // Fetch the list of employees from your API endpoint
-    //     fetch('http://localhost:5000/api/employee/list')
-    //         .then((response) => response.json())
-    //         .then((data) => {
-    //             setEmployees(data);
-    //         })
-    //         .catch((error) => {
-    //             console.error('Error fetching employees:', error);
-    //         });
-    // }, []);
 
     const handleEditClick = (employeeId) => {
         // Open the edit modal when the "Edit" button is clicked
@@ -173,7 +175,6 @@ const EmployeeList = () => {
         // Close both edit and delete modals when the close button or backdrop is clicked
         setIsEditModalOpen(false);
         setIsDeleteModalOpen(false);
-        // Reset the selected employee IDs
         setEmployeeToEdit(null);
         setEmployeeToDelete(null);
     };
@@ -184,11 +185,44 @@ const EmployeeList = () => {
     };
 
 
+    const saveAs = (data, fileName) => {
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        const url = window.URL.createObjectURL(data);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+
+    const exportToExcel = () => {
+        const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const fileExtension = '.xlsx';
+    
+    
+        // Filter and map the data to include only the header fields
+        const filteredEmployees = displayEmployees.map(employee => {
+            return {
+                'Name': employee.name,
+                'Email': employee.email,
+                'Phone Number': employee.phoneNumber,
+                'Company Name': employee.adminCompanyName,
+            };
+        });
+    
+        const ws = XLSX.utils.json_to_sheet([...Object.values(filteredEmployees)]);
+        const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const data = new Blob([excelBuffer], { type: fileType });
+        const fileName = 'admin_list' + fileExtension;
+        saveAs(data, fileName);
+    };
+    
+    
+
     return (
         <>
-            {/* <Navbar /> */}
-            {/* <SuperNavbar/> */}
-            {/* <SuperSidebar/> */}
             <NavSideSuper />
             <div className="m-5 pl-1 md:pl-64 mt-20">
                 {/* Display error message */}
@@ -201,20 +235,40 @@ const EmployeeList = () => {
                 <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">Admin List</h1>
 
                 {/* Add Employee button */}
+                <div className="mb-2 flex justify-center md:pl-2 md:-mt-8">
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        value={searchQuery}
+                        onChange={handleSearch}
+                        className="w-full md:w-1/3 border border-gray-700 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-lg px-2 py-1 text-left mt-2"
+                    />
+                </div>
 
                 <div className="relative mb-7 md:mb-14">
-
                     <button
-                        className="bg-orange-500 text-white font-bold py-1 px-5 rounded-lg absolute top-2 right-1"
+                        className="bg-green-500 text-white font-bold py-1 px-5 rounded-lg absolute top-2 right-1"
                         onClick={handleAddClick}
                     >
-                        Add Admin
+                        <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
+                        <span className="font-bold">Add New</span>
+                    </button>
+                </div>
+
+
+                <div className="relative mb-7 md:mb-14">
+                    <button
+                        className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-2 right-36 text-sm md:text-sm flex items-center mr-1" // Positioning
+                        onClick={exportToExcel}
+                    >
+                        <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+                        <span className="font-bold">Export</span>
                     </button>
                 </div>
 
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto mt-10 md:mt-5 ">
+                    <table className="min-w-full table-auto mt-1 md:mt-1 ">
                         <thead className='bg-orange-500 text-white text-sm md:text-base'>
                             <tr>
                                 {/* <th className="px-4 py-2 text-center">Sr No.</th> */}
@@ -226,29 +280,30 @@ const EmployeeList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentEmployees.map((employee, index) => (
+                            {displayEmployees.map((employee, index) => (
                                 <tr key={employee._id}>
                                     {/* <td className="border px-4 py-2 text-center">{index + 1}</td> */}
-                                    <td className="border px-4 py-2 text-left">{employee.name}</td>
+                                    <td className="border px-4 py-2 text-center font-semibold">{employee.name}</td>
                                     <td className="border px-4 py-2">{employee.email}</td>
                                     <td className="border px-4 py-2 text-center">{employee.phoneNumber}</td>
                                     <td className="border px-4 py-2 text-center font-semibold">{employee.adminCompanyName}</td>
                                     <td className="border px-4 py-2">
                                         <FontAwesomeIcon
-                                            icon={faPenToSquare}
+                                            icon={faEye}
                                             className="text-blue-500 hover:underline cursor-pointer pl-3"
+                                            onClick={() => handleViewClick(employee._id)}
+                                        />
+                                        <FontAwesomeIcon
+                                            icon={faPenToSquare}
+                                            className="text-blue-500 hover:underline cursor-pointer pl-4"
                                             onClick={() => handleEditClick(employee._id)}
                                         />
                                         <FontAwesomeIcon
                                             icon={faTrash}
-                                            className="text-blue-500 hover:underline cursor-pointer pl-5"
+                                            className="text-blue-500 hover:underline cursor-pointer pl-5 -mr-5"
                                             onClick={() => handleDeleteClick(employee._id)}
                                         />
-                                        <FontAwesomeIcon
-                                            icon={faEye}
-                                            className="text-blue-500 hover:underline cursor-pointer pl-5 -mr-5"
-                                            onClick={() => handleViewClick(employee._id)}
-                                        />
+
                                     </td>
                                 </tr>
                             ))}
