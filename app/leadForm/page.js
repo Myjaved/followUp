@@ -4,9 +4,13 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import NavSide from '../components/NavSide';
 import { useRouter } from 'next/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
 const LeadForm = () => {
-    const router=useRouter()
+    const router = useRouter()
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+    const [successMessage, setSuccessMessage] = useState('')
     const [formData, setFormData] = useState({
         customerName: '',
         companyName: '',
@@ -17,6 +21,11 @@ const LeadForm = () => {
         website: '',
         leadPicture: null,
     });
+
+    const handleModalClose = () => {
+        setIsSuccessModalOpen(false)
+        router.push('/leadList')
+    }
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,6 +62,9 @@ const LeadForm = () => {
         try {
             const response = await axios.post('http://localhost:5000/api/lead/createLead', formDataWithFile, { headers });
             console.log('Lead created:', response.data);
+            setSuccessMessage('Lead Created Successfully')
+            setIsSuccessModalOpen(true)
+
 
             // Send the lead notification
             const leadNotificationData = {
@@ -75,8 +87,10 @@ const LeadForm = () => {
 
             const leadNotificationResponse = await axios.post('http://localhost:5000/api/lead/create/Notification', leadNotificationFormData, { headers });
             console.log('Lead notification created:', leadNotificationResponse.data);
+            setSuccessMessage("Lead Created Successfully")
+            setIsSuccessModalOpen(true)
             clearForm();
-            router.push('/leadList')
+            // router.push('/leadList')
         } catch (error) {
             console.error('Error creating lead:', error);
         }
@@ -84,28 +98,63 @@ const LeadForm = () => {
 
     return (
         <>
-           
+
+            {isSuccessModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+
+                        <div className="p-2 text-center">
+                            {/* Customize this section to display your success message */}
+                            <FontAwesomeIcon icon={faCircleCheck} className='text-3xl md:text-5xl text-green-600 mt-2' />
+                            <p className="mb-3 text-center justify-center mt-3">
+                                {successMessage}
+                            </p>
+                            <button
+                                type="button"
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2 text text-xs md:text-base"
+                                onClick={handleModalClose}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <NavSide />
             <div className="w-full md:flex justify-center items-center min-h-screen md:mt-10 md:pl-28 bg-slate-50">
                 <div className="w-full md:w-1/2 mt-24 md:mt-0 lg:mt-0">
                     <div className="w-max-w-2xl overflow-x-auto border border-gray-200 rouned-lg p-5 bg-white shadow-md rounded ">
                         <h1 className="text-xl font-bold mb-4 text-orange-500">Create Lead</h1>
+                        <div className="mb-2">
+                            <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="description">
+                                Lead Title
+                            </label>
+                            <input
+                                id="description"
+                                name="description"
+                                value={formData.description}
+                                onChange={handleInputChange}
+                                placeholder='Enter Lead Title'
+                                className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="customerName">
+                                Customer Name
+                            </label>
+                            <input
+                                type="text"
+                                id="customerName"
+                                name="customerName"
+                                value={formData.customerName}
+                                onChange={handleInputChange}
+                                placeholder='Enter Name'
+                                className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
+                            />
+                        </div>
                         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
                             <div className="mb-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="customerName">
-                                    Customer Name
-                                </label>
-                                <input
-                                    type="text"
-                                    id="customerName"
-                                    name="customerName"
-                                    value={formData.customerName}
-                                    onChange={handleInputChange}
-                                    placeholder='Enter Name'
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
-                                />
-                            </div>
-                            <div className="mb-2 pl-3">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="companyName">
                                     Company Name
                                 </label>
@@ -116,9 +165,39 @@ const LeadForm = () => {
                                     value={formData.companyName}
                                     onChange={handleInputChange}
                                     placeholder='Company name'
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                    className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
                                 />
                             </div>
+                            <div className="mb-2 ">
+                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="ownerName">
+                                    Owner&apos;s Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="ownerName"
+                                    name="ownerName"
+                                    value={formData.ownerName}
+                                    onChange={handleInputChange}
+                                    placeholder='Enter Owners name'
+                                    className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
+                                />
+                            </div>
+
+                            <div className="mb-2 ">
+                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
+                                    Email
+                                </label>
+                                <input
+                                    type="text"
+                                    id="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    placeholder='Enter Email'
+                                    className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
+                                />
+                            </div>
+
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="contactNo">
                                     Mobile No
@@ -129,48 +208,9 @@ const LeadForm = () => {
                                     name="contactNo"
                                     value={formData.contactNo}
                                     onChange={handleInputChange}
-                                    placeholder='+123-456-7890'
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
-                                    />
-                            </div>
-                            <div className="mb-2 pl-3">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
-                                    Email
-                                </label>
-                                <input
-                                    type="text"
-                                    id="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    placeholder='****@gmail.com'
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
-                                     />
-                            </div>
-                            <div className="mb-2">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="description">
-                                    Lead Description
-                                </label>
-                                <input
-                                    id="description"
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
-                                    />
-                            </div>
-                            <div className="mb-2 pl-3">
-                                <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="ownerName">
-                                    Owner&apos;s Name
-                                </label>
-                                <input
-                                    type="text"
-                                    id="ownerName"
-                                    name="ownerName"
-                                    value={formData.ownerName}
-                                    onChange={handleInputChange}
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
-                                     />
+                                    placeholder='Enter Mobile No.'
+                                    className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
+                                />
                             </div>
                             <div className="mb-2">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="website">
@@ -182,11 +222,12 @@ const LeadForm = () => {
                                     name="website"
                                     value={formData.website}
                                     onChange={handleInputChange}
-                                    placeholder='www.example.com'
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
-                                     />
+                                    placeholder='Enter WebSite URL'
+                                    className="border rounded-md px-2 py-1 text-xs md:text-sm w-full"
+                                />
                             </div>
-                            <div className="mb-4 pl-3">
+
+                            <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="leadPicture">
                                     Lead Picture
                                 </label>
@@ -195,14 +236,14 @@ const LeadForm = () => {
                                     id="leadPicture"
                                     name="leadPicture"
                                     onChange={handleChange}
-                                    className="border rounded-md px-2 py-1 text-xs md:text-base w-full"
+                                    className="border rounded-md px-2 py-1 text-xs md:text-xs w-full"
                                 />
                             </div>
 
                             <div className="col-span-2 flex justify-center">
                                 <button
                                     type="submit"
-                                    className="text-sm md:text-base  bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    className="text-sm md:text-base  bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded focus:outline-none focus:shadow-outline"
                                 >
                                     Create Lead
                                 </button>

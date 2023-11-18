@@ -1,12 +1,24 @@
-
 'use client'
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faEye,faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import NavSideEmp from '../components/NavSideEmp';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
+
 
 
 const formatDateString = (dateString) => {
@@ -29,10 +41,21 @@ const ReceivedTaskList = () => {
   const [loading, setLoading] = useState(true); // Add a loading state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(15); // Define tasks to show per page
+  const [searchTerm, setSearchTerm] = useState(''); // State to hold the search term
 
 
-  let serialNumber = 1;
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value); // Set the search term as the user types
+    setCurrentPage(1); // Reset to the first page when searching
+  };
 
+
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * tasksPerPage + 1;
+  };
 
   const handlePicturePreview = (imageUrl) => {
     const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
@@ -91,7 +114,6 @@ const ReceivedTaskList = () => {
     const currentDate = new Date();
     const deadlineDate = new Date(task.deadlineDate);
 
-    
     if (task.status === 'completed') {
       return {
         colorClass: ' bg-green-200 rounded-full font-semibold text-center text-green-900',
@@ -131,12 +153,75 @@ const ReceivedTaskList = () => {
     }
   };
 
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  // Function to handle page change
+  const paginate = pageNumber => setCurrentPage(pageNumber);
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+   
+    // Fetch employee names
+    
+
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredTasks.map(task => {
+      return {
+        'Title': task.title,
+        'Status': task.status,
+        'StartDate': task.startDate,
+        'DeadLine': task.deadlineDate,
+        'AssignTo': task.assignTo, // Assign the name if available, otherwise use the ID
+      };
+    });
+
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'receivedTask_list' + fileExtension;
+    saveAs(data, fileName);
+  };
+
 
   return (
     <>
       <NavSideEmp />
       <div className="m-5 pl-5 md:pl-72 mt-20">
-        <h2 className="text-xl md:text-2xl font-bold mb-4 m-6 text-orange-500">Received Task List</h2>
+        <h1 className="text-xl md:text-2xl font-bold mb-4 text-left text-orange-500">Received Task List</h1>
+
+        <div className="flex justify-center items-center mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search ..."
+            className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/3"
+          />
+        </div>
+        <div className="relative mb-7 md:mb-10">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
+
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
@@ -148,65 +233,72 @@ const ReceivedTaskList = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead>
+              <thead className='bg-orange-600 text-white'>
                 <tr>
-                  <th className="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Sr. No.
-                  </th>
-                  <th className="px-4 pl-14 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-4 pl-3 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 pl-10 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Deadline Date
-                  </th>
-                  <th className="py-2 pr-10 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-4 py-2 ">Sr.No.</th>
+                  <th className="px-4 py-2 ">Title</th>
+                  <th className="px-4 py-2 ">Status</th>
+                  <th className="px-4 py-2 ">Date</th>
+                  <th className="px-4 py-2 ">DeadLine</th>
+                  <th className="px-4 py-2 ">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {tasks.map((task) => {
+
+                {currentTasks.length > 0 ? (
+                currentTasks.map((task, index) => {
                   const { colorClass, statusText } = getStatusColorAndText(task);
                   return (
                     // <tr key={task._id} className={`hover:bg-gray-100 ${colorClass}`}>
                     <tr key={task._id}>
-                      <td className="px-6 py-2 whitespace-nowrap text-center">
-                        {serialNumber++}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap">{task.title}</td>
+                      <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
+
+                      <td className="border px-6 py-2 whitespace-nowrap">{task.title}</td>
                       {/* <td className={`px-6 py-2 whitespace-nowrap font-bold`}>{statusText}</td> */}
-                      <td className=" px-4 py-2 text-center">
-                        <span className={` px-4 py-1 text-left ${colorClass}`}>
+                      <td className="border px-4 py-2 text-center">
+                        <span className={`border px-4 py-1 text-left ${colorClass}`}>
                           {statusText}
                         </span>
                       </td>
-                      <td className="px-6 py-2 whitespace-nowrap">{formatDateDisplay(task.startDate)}</td>
-                      <td className="px-6 py-2 whitespace-nowrap">{formatDateDisplay(task.deadlineDate)}</td>
-                      <td className="px-5 py-2 whitespace-nowrap">
+                      <td className="border px-6 py-2 whitespace-nowrap text-center">{formatDateDisplay(task.startDate)}</td>
+                      <td className="border px-6 py-2 whitespace-nowrap text-center">{formatDateDisplay(task.deadlineDate)}</td>
+                      <td className="border px-5 py-2 whitespace-nowrap">
                         <FontAwesomeIcon
                           icon={faEye}
-                          className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-lg"
+                          className="text-blue-500 cursor-pointer text-xl text-right pl-6"
                           onClick={() => handleViewClick(task._id)}
                         />
-                        {/* <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-sm"
-                        onClick={() => handleViewClick(task._id)}
-                      >
-                        View
-                      </button> */}
                       </td>
+
                     </tr>
                   );
-                })}
+                })
+                ):(
+                  <tr>
+                    <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                      No Received Tasks Found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
+        )}
+
+        {!loading && (
+          <ul className="flex justify-center items-center mt-4">
+            {Array.from({ length: Math.ceil(tasks.length / tasksPerPage) }, (_, index) => (
+              <li key={index} className="px-3 py-2">
+                <button
+                  onClick={() => paginate(index + 1)}
+                  className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                    } px-4 py-2 rounded`}
+                >
+                  {index + 1}
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
 
         {/* View Task Modal */}
@@ -278,13 +370,13 @@ const ReceivedTaskList = () => {
                     <p className="mb-2 text-left flex  item-center">
                       {/* <strong>Audio:</strong>{" "}
                       {viewTask.audio ? ( */}
-                        <span className='mr-1'> <strong>Audio:</strong></span>{" "}
-                        {viewTask.audio ? (
-                          <audio controls className='w=64 h-8 md:w-96 md:h-10 text-lg'>
-                            <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
-                            Your browser does not support the audio element.
-                          </audio>
-                      
+                      <span className='mr-1'> <strong>Audio:</strong></span>{" "}
+                      {viewTask.audio ? (
+                        <audio controls className='w=64 h-8 md:w-96 md:h-10 text-lg'>
+                          <source src={`http://localhost:5000/${viewTask.audio}`} type="audio/mp3" />
+                          Your browser does not support the audio element.
+                        </audio>
+
                       ) : (
                         "Not Added"
                       )}

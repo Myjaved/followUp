@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleUp, faTableCellsLarge, faTasks, faSquareCheck, faHourglassStart, faExclamationCircle, faPenToSquare, faLinesLeaning, faSquarePlus, faBarsStaggered } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
-import Image from 'next/image';
 
 
 const EmployeeSidebar = () => {

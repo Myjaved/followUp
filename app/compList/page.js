@@ -18,7 +18,7 @@ const CompanyList = () => {
     const [editedCompany, setEditedCompany] = useState(null);
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
-    const itemsPerPage = 9; // Number of items to show per page
+    const itemsPerPage = 15; // Number of items to show per page
     const [currentPage, setCurrentPage] = useState(1);
 
     const router = useRouter()
@@ -170,7 +170,7 @@ const CompanyList = () => {
 
                     <div className="relative mb-4 md:mb-16">
                         <button
-                            className="bg-green-500 text-white font-extrabold py-1 md:py-2 px-2 md:px-3 rounded-md md:absolute md:-mt-12 top-2 right-2 text-sm md:text-sm flex items-center mr-1" // Positioning
+                            className="bg-green-500 text-white font-extrabold py-1 md:py-2 px-2 md:px-3 rounded-md md:absolute md:-mt-12 top-2 right-2 text-sm md:text-sm flex items-center mr-1 mb-2" // Positioning
                             // style={{ right: '305px' }} // Adjust the right property to move the button to the left
                             onClick={() => router.push('/company')}
                         >
@@ -179,7 +179,7 @@ const CompanyList = () => {
                         </button>
 
                         <button
-                            className="bg-green-700 text-white font-extrabold py-1 md:py-2 px-2 md:px-4 rounded-md md:absolute md:-mt-12 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
+                            className="bg-green-700 text-white font-extrabold py-1 md:py-2 px-2  md:px-4 rounded-md md:absolute md:-mt-12 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
                             onClick={exportToExcel}
                         >
                             <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-2 font-bold" />
@@ -213,7 +213,7 @@ const CompanyList = () => {
                                                     className="text-orange-500 hover:underline mr-1 cursor-pointer text-lg"
                                                     onClick={() => handleEditClick(company._id)} />
                                                 <FontAwesomeIcon icon={faTrash}
-                                                    className="text-orange-500 hover:underline mr-1 pl-5 cursor-pointer text-lg"
+                                                    className="text-orange-500 hover:underline mr-1 pl-3 cursor-pointer text-lg"
                                                     onClick={() => handleDeleteClick(company._id)}
                                                 />
                                             </td>

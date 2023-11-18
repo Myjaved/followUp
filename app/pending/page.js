@@ -3,9 +3,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faSpinner,faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import NavSide from '../components/NavSide';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 
 const PendingTasks = () => {
@@ -78,7 +90,7 @@ const PendingTasks = () => {
                         Authorization: token,
                     },
                 });
-
+                console.log(response)
                 const tasksWithNames = await Promise.all(
                     response.data.map(async (task) => {
                         // Fetch the employee name associated with the ID
@@ -87,8 +99,8 @@ const PendingTasks = () => {
                                 Authorization: token,
                             },
                         });
+                        
                         const assigneeName = assigneeResponse.data.name;
-
                         // Format the date as dd/mm/yyyy
                         const formattedStartDate = formatDate(task.startDate);
                         const formattedDeadlineDate = formatDate(task.deadlineDate);
@@ -126,6 +138,36 @@ const PendingTasks = () => {
         // Close the view modal
         setViewModalOpen(false);
     };
+    const exportToExcel = async () => {
+        const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const fileExtension = '.xlsx';
+    
+    
+        // Filter and map the data including the header fields and employee names
+        const tasksToExport = filteredTasks.map(task => {
+          return {
+            'Title': task.title,
+            'Status': task.status,
+            'StartDate': task.startDate,
+            'DeadLine': task.deadlineDate,
+            'AssignTo': task.assignTo, // Assign the name if available, otherwise use the ID
+          };
+        });
+    
+        // Create a worksheet from the filtered task data
+        const ws = XLSX.utils.json_to_sheet(tasksToExport);
+        const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+    
+        // Convert the workbook to an array buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    
+        // Create a Blob from the array buffer
+        const data = new Blob([excelBuffer], { type: fileType });
+    
+        // Set the filename and save the file using saveAs function
+        const fileName = 'Pending Tasks_list' + fileExtension;
+        saveAs(data, fileName);
+      };
 
 
     return (
@@ -143,6 +185,14 @@ const PendingTasks = () => {
                         onChange={handleSearchInputChange}
                     />
                 </div>
+                <div className="relative mb-7 md:mb-12">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
 
 
                 {loading ? (
@@ -157,19 +207,20 @@ const PendingTasks = () => {
 
                     <div className="overflow-x-auto">
                         <table className="min-w-full table-auto">
-                            <thead>
+                            <thead className='bg-orange-500 text-white'>
                                 <tr>
                                     <th className="px-4 py-2 text-center">Sr.No</th>
                                     <th className="px-4 py-2 text-center">Task Title</th>
                                     <th className="px-4 py-2 text-center">Status</th>
-                                    <th className="px-4 py-2 text-center">Start Date</th>
+                                    <th className="px-4 py-2 text-center">StartDate</th>
                                     <th className="px-4 py-2 text-center">DeadLine</th>
-                                    <th className="px-4 py-2 text-center">Assign To</th>
+                                    <th className="px-4 py-2 text-center">AssignTo</th>
                                     <th className="px-4 py-2 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {currentTasks.map((task, index) => (
+                                {tasks.length >0 ? (
+                                currentTasks.map((task, index) => (
                                     <tr key={task._id}>
                                         <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                                         <td className="border px-4 py-2 text-center text-orange-600 font-semibold">
@@ -178,16 +229,23 @@ const PendingTasks = () => {
                                         <td className="border px-4 py-2 text-center"><span className='px-4 py-1 bg-blue-200 text-blue-800 rounded-full text-sm'>{task.status}</span></td>
                                         <td className="border px-4 py-2 text-center">{task.startDate}</td>
                                         <td className="border px-4 py-2 text-center">{task.deadlineDate}</td>
-                                        <td className="border px-4 py-2 text-center">{task.assignTo}</td>
-                                        <td className="border px-4 py-2">
+                                        <td className="border px-4 py-2 text-center font-semibold">{task.assignTo}</td>
+                                        <td className="border px-2 py-2">
                                             <FontAwesomeIcon
                                                 icon={faEye}
-                                                className="text-blue-500 hover:underline mr-5 cursor-pointer pl-7 text-xl "
+                                                className="text-blue-500 hover:underline cursor-pointer text-xl ml-8"
                                                 onClick={() => handleViewClick(task._id)}
                                             />
                                         </td>
                                     </tr>
-                                ))}
+                                ))
+                                ):(
+                                    <tr>
+                                      <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                                         No Pending Tasks Found
+                                      </td>
+                                    </tr>
+                                  )}
                             </tbody>
                         </table>
                         <ul className="flex justify-center items-center mt-4">

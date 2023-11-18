@@ -1,630 +1,917 @@
-
 'use client'
-
-import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faAngleDown, faPaperPlane, faTasks, faSquareCheck, faHourglassStart, faExclamationCircle, faPenToSquare, faTableCellsLarge, faUser, faLinesLeaning, faClipboardList, faUserPlus, faBarsStaggered, faSquarePlus } from '@fortawesome/free-solid-svg-icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { faSignOutAlt, faBell, faEnvelope, faKey } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import jwt_decode from 'jwt-decode';
-import NavSide from '../components/NavSide';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faCircleCheck, faCaretDown, faSearch } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link';
+import Image from 'next/image';
 
-
-const decodedToken = typeof window !== 'undefined' ? jwt_decode(localStorage.getItem('authToken')) : null;
-
-
-const getCurrentTimeIn12HourFormat = () => {
-  const now = new Date();
-  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-};
-
-const TaskForm = () => {
-  const router = useRouter();
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedAssignees, setSelectedAssignees] = useState([]);
-
-  const handleAssigneeSelection = (employeeId) => {
-    if (!selectedAssignees.includes(employeeId)) {
-      const updatedAssignees = [...selectedAssignees, employeeId];
-      setSelectedAssignees(updatedAssignees);
-  
-      // Update formData with the latest assignee IDs
-      setFormData({
-        ...formData,
-        assignTo: updatedAssignees, // Update assignTo with the updatedAssignees array
-      });
-    }
-  };
-  
-
-  const handleRemoveAssignee = (employeeId) => {
-    const updatedAssignees = selectedAssignees.filter((id) => id !== employeeId);
-    setSelectedAssignees(updatedAssignees);
-  };
-  const handleModalClose = () => {
-    setIsSuccessModalOpen(false);
-    router.push('/taskList');
-  };
-
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    startDate: new Date().toISOString().split('T')[0],
-    deadlineDate: '',
-    assignTo: '',
-    picture: null,
-    audio: null,
-    assignedBy: decodedToken?.employeeId,
-  });
-
-  const [errors, setErrors] = useState([]);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [subemployees, setSubemployees] = useState([]);
-  const [currentStartTime, setCurrentStartTime] = useState(getCurrentTimeIn12HourFormat());
-  const [currentEndTime, setCurrentEndTime] = useState(getCurrentTimeIn12HourFormat());
-
-  useEffect(() => {
-    axios
-      .get('http://localhost:5000/api/employee/subemployees/list', {
-        headers: {
-          Authorization: localStorage.getItem('authToken'),
-        },
-      })
-      .then((response) => {
-        const subemployeeList = response.data.map((subemployee) => ({
-          id: subemployee._id,
-          name: `${subemployee.name}`, // Include type (Employee)
-          phoneNumber: subemployee.phoneNumber,
-          type: 'Employee', // Indicate type in the data
-        }));
-
-        // Also add the Admin as an option
-        subemployeeList.push({
-          id: decodedToken.employeeId, // Use the Admin's ID
-          name: `${decodedToken.name} (Admin)`, // Include type (Admin)
-          phoneNumber: null,
-          type: 'Admin', // Indicate type in the data
-        });
-
-        console.log("subemployeeList", subemployeeList);
-        setSubemployees(subemployeeList);
-      })
-      .catch((error) => {
-        console.error('Error fetching subemployees:', error);
-      });
-
-    setCurrentStartTime(getCurrentTimeIn12HourFormat());
-
-    // Set current end time when the component mounts
-    setCurrentEndTime(getCurrentTimeIn12HourFormat());
-  }, []);
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value)
-  }
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
+const NavSide = () => {
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isTasksOpen, setTasksOpen] = useState(false);
+    const [isEmployeeOpen, setEmployeeOpen] = useState(false);
+    const [isLeadOpen, setLeadOpen] = useState(false); // Add this state
+    const [isDropdownOpen, setDropdownOpen] = useState(false);
+    const [profilePictureURL, setProfilePictureURL] = useState(null);
+    const [role, setRole] = useState('Admin');
+    const [newTasks, setNewTasks] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [notificationCount, setNotificationCount] = useState(0); // State variable for notification count
+    const [envelopeNotifications, setEnvelopeNotifications] = useState([]); // State variable for envelope (lead) notifications
+    const [envelopeNotificationCount, setEnvelopeNotificationCount] = useState(0); // Count of envelope notifications
+    const [isLeadDropdownOpen, setLeadDropdownOpen] = useState(false); // State variable for lead dropdown
+    const [isLeadModalOpen, setLeadModalOpen] = useState(false);
+    const [selectedLeadNotification, setSelectedLeadNotification] = useState(null);
+    const [isChangePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+    const [changePasswordData, setChangePasswordData] = useState({
+        email: '',
+        currentPassword: '',
+        newPassword: '',
     });
-  };
-
-  const filteredEmployees = subemployees.filter(subemployee => {
-    return subemployee.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  // const handleFileChange = (e) => {
-  //   const { name, files } = e.target;
-  //   setFormData({
-  //     ...formData,
-  //     [name]: files[0],
-  //   });
-  // };
-  const handleFileChange = (e, fileType) => {
-    const { files } = e.target;
-    setFormData({
-      ...formData,
-      [fileType]: files[0],
-    });
-  };
-
-  const handleRemovePicture = () => {
-    setFormData({
-      ...formData,
-      picture: null,
-    });
-    const fileInput = document.getElementById('picture');
-    if (fileInput) {
-      fileInput.value = '';
-    }
-  };
-  
-  const handleRemoveAudio = () => {
-    setFormData({
-      ...formData,
-      audio: null,
-    });
-    const audioInput = document.getElementById('audio');
-    if (audioInput) {
-      audioInput.value = '';
-    }
-  };
-  
-  // const handleRemovePicture = () => {
-  //   setFormData({
-  //     ...formData,
-  //     picture: null,
-  //   });
-  //   const fileInput = document.getElementById('picture');
-  //   if (fileInput) {
-  //     fileInput.value = '';
-  //   }
-  // };
-
-  // const handleRemoveAudio = () => {
-  //   setFormData({
-  //     ...formData,
-  //     audio: null,
-  //   });
-  //   const audioInput = document.getElementById('audio');
-  //   if (audioInput) {
-  //     audioInput.value = '';
-  //   }
-  // };
 
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen)
-  }
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("clicked")
-    console.log(formData.assignTo)
-    if (!formData.assignTo || formData.assignTo.length === 0) {
-      // Handle the case where no subemployee is selected
-      return;
-    }
-    const selectedSubemployee = subemployees.find((subemployee) => subemployee.id === formData.assignTo);
-    const phoneNumber = selectedSubemployee ? selectedSubemployee.phoneNumber : null;
+    const toggleDropdown = () => {
+        setDropdownOpen(!isDropdownOpen);
+    };
+
+    const toggleSidebar = () => {
+        setSidebarOpen(!isSidebarOpen);
+    };
+    const toggleLead = () => {
+        setLeadOpen(!isLeadOpen);
+    };
+
+    const toggleTasks = () => {
+        setTasksOpen(!isTasksOpen);
+    };
+
+    const toggleEmployee = () => {
+        setEmployeeOpen(!isEmployeeOpen);
+    };
+
+    const [changePasswordErrors, setChangePasswordErrors] = useState({});
+
+    const router = useRouter();
 
 
-    console.log(selectedSubemployee)
-    // if (!selectedSubemployee) {
-    //   // Handle the case where no subemployee is selected
-    //   return;
-    // }
+    const openChangePasswordModal = () => {
+        console.log('Change password modal opened.'); // Add this line
 
-    // const phoneNumber = selectedSubemployee.phoneNumber;
+        setChangePasswordModalOpen(true);
+    };
 
-    // const form = new FormData();
-    // form.append('title', formData.title);
-    // form.append('description', formData.description);
-    // form.append('startDate', formData.startDate);
-    // form.append('startTime', currentStartTime);
-    // form.append('deadlineDate', formData.deadlineDate);
-    // form.append('endTime', currentEndTime);
-    // form.append('assignTo', formData.assignTo);
-    // form.append('phoneNumber', phoneNumber); // Add phone number to the form
-    // form.append('picture', formData.picture);
-    // form.append('audio', formData.audio);
-    // form.append('assignedBy', formData.assignedBy);
-    const requestBody = {
-      title: formData.title,
-      description: formData.description,
-      startDate: formData.startDate,
-      startTime: currentStartTime,
-      deadlineDate: formData.deadlineDate,
-      endTime: currentEndTime,
-      assignTo: formData.assignTo,
-      phoneNumber: phoneNumber, // Update this with the appropriate variable
-      assignedBy: formData.assignedBy,
-      picture: formData.picture,
-      audio: formData.audio
+    // Function to close the changePassword modal
+    const closeChangePasswordModal = () => {
+        setChangePasswordModalOpen(false);
+    };
+
+    const toggleLeadDropdown = () => {
+        setLeadDropdownOpen(!isLeadDropdownOpen);
     };
 
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/task/create', requestBody, {
-        headers: {
-          Authorization: localStorage.getItem('authToken'),
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+    const openModal = () => {
+        setModalOpen(true);
+    };
 
-      if (response.status === 201) {
-        console.log('Task created Successfully');
-        setSuccessMessage(response.data.message);
-        setErrors([]);
+    const closeModal = () => {
+        setModalOpen(false);
+    };
 
-        const notificationResponse = await axios.post('http://localhost:5000/api/notification/create', {
-          recipientId: formData.assignTo,
-          taskId: response.data.taskId,
-          message: 'A new task has been assigned to you!',
-          title: formData.title,
-          description: formData.description,
-          startDate: formData.startDate,
-          deadlineDate: formData.deadlineDate,
-          startTime: currentStartTime,
-          endTime: currentEndTime,
-          status: 'Pending',
-        }, {
-          headers: {
-            Authorization: localStorage.getItem('authToken'),
-          },
-        });
+    const openLeadModal = (notification) => {
+        setSelectedLeadNotification(notification);
+        setLeadModalOpen(true);
+    };
 
-        if (notificationResponse.status === 201) {
-          console.log('Notification sent Successfully');
+    const closeLeadModal = () => {
+        setSelectedLeadNotification(null);
+        setLeadModalOpen(false);
+    };
+
+
+    const handleLeadNotificationClick = async (notification) => {
+        try {
+            if (!notification.clicked) {
+                // Mark the notification as clicked in the local state
+                const updatedEnvelopeNotifications = envelopeNotifications.map((envelopeNotification) => {
+                    if (envelopeNotification._id === notification._id) {
+                        return { ...envelopeNotification, clicked: true };
+                    }
+                    return envelopeNotification;
+                });
+
+                // Filter out the viewed notification from the list
+                const filteredNotifications = updatedEnvelopeNotifications.filter(
+                    (envelopeNotification) => envelopeNotification._id !== notification._id
+                );
+
+                setEnvelopeNotifications(filteredNotifications);
+
+                // Update the envelope notification count
+                const updatedCount = envelopeNotificationCount - 1;
+                setEnvelopeNotificationCount(updatedCount);
+
+                setSelectedLeadNotification(notification);
+                setLeadModalOpen(true);
+
+                // Call the provided API endpoint to mark the notification as read on the server
+                await axios.put(`http://localhost:5000/api/lead/notifications/${notification._id}`, null, {
+                    headers: {
+                        Authorization: localStorage.getItem('authToken'),
+                    },
+                });
+
+                setLeadDropdownOpen(false);
+            }
+        } catch (error) {
+            console.error('Error handling lead notification click:', error);
         }
-        setIsSuccessModalOpen(true);
+    };
 
-        // router.push('/taskList');
-      }
-    } catch (error) {
-      if (error.response && error.response.data && error.response.data.errors) {
-        setErrors(error.response.data.errors);
-      } else {
-        setErrors([{ msg: 'Internal Server Error' }]);
-      }
+    const handleChangePassword = async () => {
+        // Function to change the password
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/changePassword', {
+                email: changePasswordData.email,
+                currentPassword: changePasswordData.currentPassword,
+                newPassword: changePasswordData.newPassword,
+            });
+
+            if (response.status === 200) {
+                // Password changed successfully
+                console.log("Password changed Successfully")
+                setChangePasswordData('')
+                setChangePasswordModalOpen(false);
+
+                // Add any success message handling here
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 400) {
+                // Handle validation errors
+                setChangePasswordErrors(error.response.data.errors);
+            } else {
+                console.error('Error changing password:', error);
+                // Handle other errors here
+            }
+        }
+    };
+
+    const handleTaskClick = async (task) => {
+        setSelectedTask(task);
+        setShowNotifications(false);
+        openModal();
+
+        // Update the task's status as clicked and decrement the notification count
+        const updatedNewTasks = newTasks.map((newTask) => {
+            if (newTask._id === task._id) {
+                return { ...newTask, clicked: true };
+            }
+            return newTask;
+        });
+        setNewTasks(updatedNewTasks);
+        localStorage.setItem('newTasks', JSON.stringify(updatedNewTasks));
+
+        // Update the notification count
+        setNotificationCount((prevCount) => prevCount - 1);
+
+        // Mark the notification as read on the server
+        try {
+            await axios.put(`http://localhost:5000/api/notification/${task._id}/read`, null, {
+                headers: {
+                    Authorization: localStorage.getItem('authToken'),
+                },
+            });
+        } catch (error) {
+            console.error('Error marking notification as read on the server:', error);
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('username');
+        localStorage.removeItem('empUsername');
+        localStorage.removeItem('subUsername');
+        router.push('/login');
+    };
+
+    const fetchAssignedByName = async (taskId) => {
+        try {
+            const response = await axios.get(`http://localhost:5000/api/employee/${taskId}`, {
+                headers: {
+                    Authorization: localStorage.getItem('authToken'),
+                },
+            });
+
+            if (response.status === 200) {
+                return response.data.name;
+            }
+        } catch (error) {
+            console.error('Error fetching assigned by name:', error);
+        }
+    };
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+
+            const empUsername = localStorage.getItem('empUsername');
+            if (!empUsername && typeof window !== 'undefined') {
+
+                const response = await axios.get('http://localhost:5000/api/notification/notifications', {
+                    headers: {
+                        Authorization: localStorage.getItem('authToken'),
+                    },
+                });
+
+                if (response.status === 200) {
+                    const notifications = response.data;
+
+                    // Map the notifications to add 'assignedByName' property
+                    const updatedNotifications = await Promise.all(
+                        notifications.map(async (task) => {
+                            // Fetch assignedByName for each task
+                            task.assignedByName = await fetchAssignedByName(task.userId);
+                            return task;
+                        })
+                    );
+
+                    setNewTasks(updatedNotifications);
+
+                    // Calculate the initial notification count
+                    const initialNotificationCount = updatedNotifications.filter((task) => !task.clicked).length;
+                    setNotificationCount(initialNotificationCount);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    }, [fetchAssignedByName]);
+
+    const fetchEnvelopeNotifications = useCallback(async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/lead/notifications');
+
+            if (response.status === 200) {
+                const notifications = response.data;
+                console.log(notifications)
+                // Filter out envelope notifications (lead notifications)
+                const envelopeNotifications = notifications.filter((notification) => {
+                    return notification; // Adjust this condition based on your API response
+                });
+
+                setEnvelopeNotifications(envelopeNotifications);
+
+                // Calculate the initial envelope notification count
+                const initialEnvelopeNotificationCount = envelopeNotifications.filter((notification) => !notification.clicked).length;
+                setEnvelopeNotificationCount(initialEnvelopeNotificationCount);
+            }
+        } catch (error) {
+            console.error('Error fetching envelope notifications:', error);
+        }
+    }, []);
+
+
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const subUsername = localStorage.getItem('subUsername');
+            const newRole = subUsername ? 'Employee' : 'Admin';
+            setRole(newRole);
+        }
+    }, []);
+
+    useEffect(() => {
+        const closeDropdown = (event) => {
+            if (isDropdownOpen) {
+                if (
+                    event.target.closest('.dropdown') === null &&
+                    event.target.closest('.dropdown-toggle') === null
+                ) {
+                    setDropdownOpen(false);
+                }
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            document.addEventListener('click', closeDropdown);
+        }
+
+        return () => {
+            if (typeof window !== 'undefined') {
+                document.removeEventListener('click', closeDropdown);
+            }
+        };
+    }, [isDropdownOpen]);
+
+    useEffect(() => {
+        fetchNotifications();
+        fetchEnvelopeNotifications();
+    }, []);
+
+    useEffect(() => {
+        const storedProfilePictureURL = localStorage.getItem('profilePictureURL');
+
+        if (storedProfilePictureURL) {
+            setProfilePictureURL(storedProfilePictureURL);
+        }
+    }, []);
+
+    const handleProfilePictureUpload = async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('profilePicture', file);
+            const response = await axios.post('http://localhost:5000/api/task/upload-profile-picture', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            const newProfilePictureURL = response.data.profilePictureURL;
+
+            localStorage.setItem('profilePictureURL', newProfilePictureURL);
+
+            setProfilePictureURL(newProfilePictureURL);
+            setDropdownOpen(false);
+        } catch (error) {
+            console.error('Error uploading profile picture:', error);
+        }
+    };
+
+    const handleProfilePictureClick = (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('profilePictureUpload');
+        fileInput.click();
+    };
+
+    const handleProfilePictureChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleProfilePictureUpload(file);
+        }
+    };
+
+    const handleNotificationClick = () => {
+        setShowNotifications(!showNotifications);
+    };
+
+    function formatDateTime(dateTimeString) {
+        const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        const date = new Date(dateTimeString);
+        const formattedDate = date.toLocaleDateString('en-GB', options);
+
+        const timeOptions = { hour: '2-digit', minute: '2-digit' };
+        const formattedTime = date.toLocaleTimeString(undefined, timeOptions);
+        return `${formattedDate} ${formattedTime}`;
     }
 
-  };
+    return (
+        <>
+            <nav className="fixed top-0 right-0 z-50 w-full bg-gray-300 text-black border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                <div className="px-3 py-3 lg:px-5 lg:pl-3">
 
-  return (
-    <>
+                    <div className="flex items-center justify-between">
 
-      <NavSide />
+                        <div className="flex items-center justify-start">
 
-      {isSuccessModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={handleModalClose}></button>
-            <div className="p-2 text-center">
-              {/* Customize this section to display your success message */}
-              <FontAwesomeIcon icon={faCircleCheck} className='text-3xl md:text-5xl text-green-600 mt-2' />
-              <p className="mb-3 text-center justify-center mt-3">
-                {successMessage}
-              </p>
-              <button
-                type="button"
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2 text text-xs md:text-base"
-                onClick={handleModalClose}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* <div className="w-full flex justify-center items-center min-h-screen mt-12 pl-28"> */}
-      <div className="w-full md:flex justify-center items-center min-h-screen md:mt-0 md:pl-28 bg-slate-50">
-        {/* <div className=" max-w-2xl overflow-x-auto border border-red-200 rounded-lg p-5 bg-gray-50"> */}
-        <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white mt-16">
+                            <button onClick={toggleSidebar} data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                                <span className="sr-only">Open sidebar</span>
+                                <svg className="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path clipRule="evenodd" fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
+                                </svg>
+                            </button>
 
-          <div className=" col-span-2 mb-3 md:text-2xl font-bold text-orange-500 text-left">Create Task</div>
-          <div className="mb-2 ">
-            <label htmlFor="title" className="block font-semibold text-xs lg:text-sm">
-              Title / कार्यासाठी नाव <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              placeholder='Enter Task Title'
-              value={formData.title}
-              onChange={handleInputChange}
-              className="border-2 border-gray-200 rounded-md px-3 py-2 w-full "
-              required
-            />
-          </div>
-
-          <div className="mb-2">
-            <label htmlFor="description" className="block font-semibold text-xs lg:text-sm">
-              Description / कार्य वर्णन <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              placeholder='Enter Task Description'
-              value={formData.description}
-              onChange={handleInputChange}
-              className="border-2 border-gray-200 rounded-md px-3 py-2 w-full"
-              required
-            />
-          </div>
+                            <Link href="#" className="flex ml-2 md:mr-24">
+                                {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
+                                <span className="self-center text-base md:text-2xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-red-800">Admin</span>
+                            </Link>
+                        </div>
 
 
-          <div className="mb-2">
-            <label htmlFor="assignTo" className="block font-semibold text-xs lg:text-sm">
-              Assign To / नियुक्त करा <span className="text-red-500">*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <div onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="border-2 border-gray-200 rounded-md px-3 py-1 w-full cursor-pointer flex justify-between">
-                <span>
-                  {selectedAssignees.length > 0 ? selectedAssignees.map(employeeId => filteredEmployees.find(subemployee => subemployee.id === employeeId)?.name).join(', ') : 'Select Employees'}
-                </span>
-                <span className="ml-2">
-                  <FontAwesomeIcon icon={faCaretDown} />
-                </span>
-              </div>
+                        <div className="flex items-center">
+                            <button
+                                onClick={toggleLeadDropdown}
+                                className="dropdown-toggle text-white flex items-center focus:outline-none mr-5"
+                            >
+                                <FontAwesomeIcon icon={faEnvelope} className="text-xl fa-lg justify-between text-blue-500" />
+                                {envelopeNotificationCount > 0 && (
+                                    <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs text-center absolute m-4 mt-0 -mr-2">
+                                        {envelopeNotificationCount}
+                                    </span>
+                                )}
+                            </button>
 
-              {isDropdownOpen && (
-                <div className="border border-gray-200 rounded-md mt-1" style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: 'white', zIndex: 100 }}>
-                  {/* Input for searching employees */}
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Employees"
-                    className="border-2 border-gray-200 rounded-md px-3 py-1 w-full mb-2"
-                  />
+                            {isLeadDropdownOpen && (
+                                 <div className={`origin-bottom-right absolute right-3 md:right-24 ${envelopeNotifications.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-72 top-6 ${envelopeNotifications.length > 0 ? 'h-28' : 'h-12'} overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                    <div
+                                        className="py-1"
+                                        role="menu"
+                                        aria-orientation="vertical"
+                                        aria-labelledby="lead-notifications-menu"
+                                    >
+                                        {envelopeNotifications.length > 0 ? (
+                                            envelopeNotifications.map((notification, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={` px-4 py-3 text-sm text-gray-700 hover-bg-gray-300 cursor-pointer ${notification.clicked ? 'bg-red-500' : ''}`}
+                                                    role="menuitem"
+                                                    onClick={() => handleLeadNotificationClick(notification)}
+                                                >
+                                                    <div className="mb-2"><strong>{notification.message}</strong></div>
+                                                    <div className="mb-2"><strong>Title:</strong> {notification.description}</div>
+                                                    <div className="mb-2"><strong>Created By:</strong> {notification.assignedByName}</div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-2 text-sm text-gray-700">No new lead notifications.</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
-                  {/* List of employees */}
-                  {filteredEmployees.map((subemployee) => (
-                    <div
-                      key={subemployee.id}
-                      onClick={() => {
-                        handleAssigneeSelection(subemployee.id);
-                      }}
-                      className="px-3 py-1 cursor-pointer hover:bg-gray-100"
-                    >
-                      {subemployee.name}
+
+                            <button
+                                onClick={handleNotificationClick}
+                                className="dropdown-toggle text-white flex items-center focus:outline-none"
+                            >
+                                <FontAwesomeIcon icon={faBell} className="text-xl fa-lg justify-between mr-1 text-yellow-600" />
+                                {notificationCount > 0 && (
+                                    <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs shadow-lg text-center absolute top-0 right-0 -mt-1 -mr-1">
+                                        {notificationCount}
+                                    </span>
+                                )}
+                            </button>
+                            
+                            {showNotifications && (
+                                <div className={`origin-bottom-right absolute right-3 md:right-24  ${newTasks.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-68 md:w-80 top-6 ${newTasks.length > 0 ? 'h-36' : 'h-12'} overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                    <div
+                                        className="py-1"
+                                        role="menu"
+                                        aria-orientation="vertical"
+                                        aria-labelledby="notifications-menu"
+                                    >
+                                        {newTasks.length > 0 ? (
+                                            newTasks.map((task, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 cursor-pointer ${task.clicked ? 'bg-red-500' : ''}`}
+                                                    role="menuitem"
+                                                    onClick={() => handleTaskClick(task)}
+                                                >
+                                                    <div className='mx-2'>
+                                                        <div className='my-2'><strong>{task.assignedByName}</strong> <span className='mx-7'>{formatDateTime(task.createdAt)}</span></div>
+                                                        <div className='my-1'><strong>{task.message}</strong></div>
+                                                        <div className='my-1'><strong>Title :</strong> {task.title}</div>
+                                                        <div className='mb-3'><strong>Task ID :</strong> {task._id.slice(17, 23)}</div>
+                                                        <hr />
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-2 text-sm text-gray-700">
+                                                No new notifications.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex items-center ml-3">
+                                <div className="relative inline-block text-left dropdown">
+                                    <button
+                                        onClick={toggleDropdown}
+                                        className="dropdown-toggle text-white flex items-center focus:outline-none"
+                                    >
+                                        {profilePictureURL ? (
+                                            <div className="profile-picture-container">
+                                                <Image
+                                                    src={profilePictureURL}
+                                                    alt="Profile"
+                                                    width={32}
+                                                    height={32}
+                                                    className="profile-picture"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Image
+                                                src="/images/man.png"
+                                                alt="User"
+                                                width={28}
+                                                height={28}
+                                                className="profile-picture"
+                                            />
+                                        )}
+
+                                        <span className="ml-2">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="w-4 h-4 inline-block"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M19 9l-7 7-7-7"
+                                                />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                    {isDropdownOpen && (
+                                        <div className="origin-top-right absolute right-0 mt-3 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                            <div
+                                                className="py-1"
+                                                role="menu"
+                                                aria-orientation="vertical"
+                                                aria-labelledby="options-menu"
+                                            >
+                                                <Link
+                                                    href="#"
+                                                    onClick={handleProfilePictureClick}
+                                                    className="px-4 py-1 text-sm text-gray-700 hover:bg-gray-300 hover:text-gray-900 flex items-center font-normal"
+                                                >
+                                                    <FontAwesomeIcon icon={faUser} className="mr-2" />
+                                                    User Profile Picture
+                                                </Link>
+
+                                                <button
+                                                    onClick={openChangePasswordModal}
+                                                    className="px-4 py-1 w-full text-left text-sm text-gray-900 hover:bg-gray-300 hover:text-gray-900 flex items-center font-normal"
+                                                    role="menuitem"
+                                                >
+                                                    <FontAwesomeIcon icon={faKey} className="mr-2" />
+                                                    Change Password
+                                                </button>
+
+                                                <button
+                                                    onClick={logout}
+                                                    className="px-4 py-1 w-full text-left text-sm text-gray-900 hover:bg-gray-300 flex items-center font-semibold"
+                                                    role="menuitem"
+                                                >
+                                                    <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    id="profilePictureUpload"
+                                    accept=".jpg, .jpeg, .png" // Allow only .jpg, .jpeg, and .png files
+                                    style={{ display: 'none' }}
+                                    onChange={handleProfilePictureChange}
+                                />
+                            </div>
+                        </div>
                     </div>
-                  ))}
                 </div>
-              )}
-            </div>
+            </nav>
 
-            {/* Display selected assignees as comma-separated list */}
-            <div>
-              Selected Assignees: {selectedAssignees.map((assigneeId) => {
-                const assignee = filteredEmployees.find((employee) => employee.id === assigneeId);
-                return (
-                  <span key={assignee.id}>
-                    {assignee.name}
-                    <button onClick={() => handleRemoveAssignee(assignee.id)}>X</button>
-                    {', '}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
-            <div className="mb-1">
-              <label htmlFor="startDate" className="block font-semibold text-xs lg:text-sm">
-                Start Date /सुरु दिनांक <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                // className="border-2 border-gray-200 rounded-md px-3 py-1 w-full"
-                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full" // Adjust the width for mobile and larger screens
-                required
-                min={new Date().toISOString().split('T')[0]} // Restrict past dates using the min attribute
-              />
-            </div>
-
-
-            <div className="mb-2">
-              <label htmlFor="startTime" className="block font-semibold text-xs lg:text-sm md:pl-7">
-                Start Time / सुरू वेळ <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center md:pl-6">
-                <select
-                  name="startHour"
-                  value={currentStartTime.split(':')[0]}
-                  onChange={(e) => {
-                    const newHour = e.target.value;
-                    setCurrentStartTime(`${newHour}:${currentStartTime.split(':')[1]} ${currentStartTime.split(' ')[1]}`);
-                  }}
-                  className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-1"
-                  required
+            {isModalOpen && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                 >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i} value={i === 0 ? '12' : i.toString().padStart(2, '0')}>
-                      {i === 0 ? '12' : i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-                <span><strong>: </strong></span>
-                <select
-                  name="startMinute"
-                  value={currentStartTime.split(':')[1].split(' ')[0]}
-                  onChange={(e) => {
-                    const newMinute = e.target.value;
-                    setCurrentStartTime(`${currentStartTime.split(':')[0]}:${newMinute} ${currentStartTime.split(':')[1].split(' ')[1]}`);
-                  }}
-                  className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
-                  required
-                >
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <option key={i} value={i.toString().padStart(2, '0')}>
-                      {i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  name="startAmPm"
-                  value={currentStartTime.split(' ')[1]}
-                  onChange={(e) => {
-                    const newAmPm = e.target.value;
-                    setCurrentStartTime(`${currentStartTime.split(':')[0]}:${currentStartTime.split(':')[1].split(' ')[0]} ${newAmPm}`);
-                  }}
-                  className="border border-gray-200 rounded-md md:px-2 py-1.5"
-                  required
-                >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-            </div>
+                    <div
+                        className="modal-container bg-white w-96 p-6 rounded shadow-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover-bg-gray-200 hover-text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark-hover-bg-gray-600 dark-hover-text-white"
+                            onClick={() => closeModal()}
+                        >
+                        </button>
+
+                        <div className="p-1 text-center">
+                            <h3 className="mb-5 text-lg font-semibold text-gray-800 dark-text-gray-400">
+                                Task Details
+                            </h3>
+                            <div>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Title:</strong> {selectedTask.title}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Description:</strong> {selectedTask.description}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Status:</strong> {selectedTask.status}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Start Date:</strong> {formatDateTime(selectedTask.startDate)}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Start Time:</strong> {selectedTask.startTime}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Deadline Date:</strong> {formatDateTime(selectedTask.deadlineDate)}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>End Time:</strong> {selectedTask.endTime}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Assigned By:</strong> {selectedTask.assignedByName}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Picture : </strong><Link href='/receivedTask'> Go to All Tasks to show</Link>
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Audio : </strong><i> Open All Task List to Listen</i>
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+                                onClick={() => closeModal()}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isLeadModalOpen && selectedLeadNotification && (
+                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-container bg-white w-96 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover-bg-gray-200 hover-text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark-hover-bg-gray-600 dark-hover-text-white"
+                            onClick={closeLeadModal}
+                        >
+                            {/* Close button icon */}
+                        </button>
+                        <div className="p-1 text-center">
+                            <h3 className="mb-5 text-lg font-semibold text-gray-800 dark-text-gray-400">
+                                Lead Details
+                            </h3>
+                            <div>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Created By : </strong><strong>{selectedLeadNotification.assignedByName}</strong>
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Title:</strong> {selectedLeadNotification.description}
+                                </p>
+
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Customer Name:</strong> {selectedLeadNotification.customerName}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Company Name:</strong> {selectedLeadNotification.companyName}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Contact No:</strong> {selectedLeadNotification.contactNo}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Email Id:</strong> {selectedLeadNotification.email}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Owner Name:</strong> {selectedLeadNotification.ownerName}
+                                </p>
+                                <p className="mb-2 text-left justify-center">
+                                    <strong>Website:</strong> {selectedLeadNotification.website}
+                                </p>
+                                {/* Add more lead notification details here */}
+                            </div>
+                            <button
+                                type="button"
+                                className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+                                onClick={closeLeadModal}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isChangePasswordModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-container bg-white md:w-2/5 lg:w2/5 p-6 rounded shadow-lg" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+                        <form>
+                            <div className="form-group mb-4">
+                                <label htmlFor="email" className="block text-gray-700">Email:</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    placeholder='Enter Email Id'
+                                    className={`w-full p-2 border rounded ${changePasswordErrors.email ? 'border-red-500' : ''}`}
+                                    value={changePasswordData.email}
+                                    onChange={(e) => setChangePasswordData({ ...changePasswordData, email: e.target.value })}
+                                />
+                                {changePasswordErrors.email && (
+                                    <div className="text-red-500">{changePasswordErrors.email}</div>
+                                )}
+                            </div>
+                            <div className="form-group mb-4">
+                                <label htmlFor="currentPassword" className="block text-gray-700">Current Password:</label>
+                                <input
+                                    type="password"
+                                    id="currentPassword"
+                                    name="currentPassword"
+                                    placeholder='Enter Your Current Password'
+                                    className={`w-full p-2 border rounded ${changePasswordErrors.currentPassword ? 'border-red-500' : ''}`}
+                                    value={changePasswordData.currentPassword}
+                                    onChange={(e) => setChangePasswordData({ ...changePasswordData, currentPassword: e.target.value })}
+                                />
+                                {changePasswordErrors.currentPassword && (
+                                    <div className="text-red-500">{changePasswordErrors.currentPassword}</div>
+                                )}
+                            </div>
+                            <div className="form-group mb-4">
+                                <label htmlFor="newPassword" className="block text-gray-700">New Password:</label>
+                                <input
+                                    type="password"
+                                    id="newPassword"
+                                    name="newPassword"
+                                    placeholder='Enter New Password'
+                                    className={`w-full p-2 border rounded ${changePasswordErrors.newPassword ? 'border-red-500' : ''}`}
+                                    value={changePasswordData.newPassword}
+                                    onChange={(e) => setChangePasswordData({ ...changePasswordData, newPassword: e.target.value })}
+                                />
+                                {changePasswordErrors.newPassword && (
+                                    <div className="text-red-500">{changePasswordErrors.newPassword}</div>
+                                )}
+                            </div>
+                            <div className="flex justify-between">
+                                <button
+                                    type="button"
+                                    className="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
+                                    onClick={handleChangePassword}
+                                >
+                                    Change Password
+                                </button>
+                                <button
+                                    type="button"
+                                    className="bg-gray-300 hover-bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
+                                    onClick={closeChangePasswordModal}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
 
-            <div className="mb-1">
-              <label htmlFor="deadlineDate" className="block font-semibold text-xs lg:text-sm">
-                Deadline /अंतिम दिनांक <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="deadlineDate"
-                name="deadlineDate"
-                value={formData.deadlineDate}
-                onChange={handleInputChange}
-                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full" // Adjust the width for mobile and larger screens
-                required
-                min={new Date().toISOString().split('T')[0]} // Restrict past dates using the min attribute
 
-              />
-            </div>
+            <aside id="logo-sidebar"
+                className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
+                <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
+                    <ul className="space-y-2 font-medium">
+                        <li>
+                            <Link href="/vector" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2">
+                                <FontAwesomeIcon icon={faTableCellsLarge} size='xl'
+                                    style={{ color: "#3ca8be", marginLeft: '5px' }} />
+                                <span className="ml-3">Dashboard</span>
+                            </Link>
+                        </li>
 
+                        <li>
+                            <button onClick={toggleTasks} className="flex items-center w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2">
+                                <FontAwesomeIcon icon={faTasks} size='xl'
+                                    style={{ color: "", marginLeft: '5px' }} />
 
+                                <span className="ml-3">Tasks</span>
+                                <FontAwesomeIcon
+                                    icon={faAngleDown}
+                                    className={`w-5 h-5 ml-auto ${isTasksOpen ? 'rotate-0' : 'rotate-180'}`}
+                                />
 
+                            </button>
+                            {isTasksOpen && (
+                                <ul className="ml-6 space-y-2 font-medium">
+                                    <li>
+                                        <Link href="/taskList" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faTasks} size='xl'
+                                                style={{ color: "purple", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">All Tasks</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                    </li>
 
-            <div className="mb-2">
-              <label htmlFor="endTime" className="block font-semibold md:pl-7 text-xs lg:text-sm ">
-                End Time / अंतिम वेळ <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center md:pl-6">
-                <select
-                  name="endHour"
-                  value={currentEndTime.split(':')[0]}
-                  onChange={(e) => {
-                    const newHour = e.target.value;
-                    setCurrentEndTime(`${newHour}:${currentEndTime.split(':')[1]} ${currentEndTime.split(' ')[1]}`);
-                  }}
-                  className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-1"
-                  required
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i} value={i === 0 ? '12' : i.toString().padStart(2, '0')}>
-                      {i === 0 ? '12' : i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-                <span><strong>:</strong></span>
-                <select
-                  name="endMinute"
-                  value={currentEndTime.split(':')[1].split(' ')[0]}
-                  onChange={(e) => {
-                    const newMinute = e.target.value;
-                    setCurrentEndTime(`${currentEndTime.split(':')[0]}:${newMinute} ${currentEndTime.split(':')[1].split(' ')[1]}`);
-                  }}
-                  className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
-                  required
-                >
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <option key={i} value={i.toString().padStart(2, '0')}>
-                      {i.toString().padStart(2, '0')}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  name="endAmPm"
-                  value={currentEndTime.split(' ')[1]}
-                  onChange={(e) => {
-                    const newAmPm = e.target.value;
-                    setCurrentEndTime(`${currentEndTime.split(':')[0]}:${currentEndTime.split(':')[1].split(' ')[0]} ${newAmPm}`);
-                  }}
-                  className="border border-gray-200 rounded-md md:px-2 py-1.5 mr-2"
-                  required
-                >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-            </div>
+                                    <li>
+                                        <Link href="/completedTask" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faSquareCheck} size='xl'
+                                                style={{ color: "#037705", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">Completed Tasks</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/pending" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faHourglassStart} size='xl'
+                                                style={{ color: "#2a5fbb", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-2">Pending Tasks</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/overdue"
+                                            className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faExclamationCircle} size='xl'
+                                                style={{ color: "#FF5733", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">Overdue Tasks</span>
 
 
-            <div className="mb-1" style={{ position: 'relative' }}>
-              <label htmlFor="picture" className="block font-semibold text-xs lg:text-sm">
-                Picture / फोटो
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="file"
-                  id="picture"
-                  name="picture"
-                  // onChange={handleFileChange}
-                  onChange={(e) => handleFileChange(e, 'picture')}
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/sendTask"
+                                            className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faPaperPlane} size='xl'
+                                                style={{ color: "red", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">Tasks Send</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/taskForm" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faPenToSquare} size='xl' style={{ color: "#de4f35", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">Add Task</span>
+                                        </Link>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
 
-                  className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
-                  style={{ paddingRight: '2.5rem' }} // Adjust padding to accommodate the button
-                />
-                {formData.picture && (
-                  <button
-                    type="button"
-                    onClick={handleRemovePicture}
-                    className="absolute text-black font-bold py-1 px-1 md:px-2 rounded-md text-xs md:text-sm"
-                    style={{ right: '0', top: '0', marginTop: '0.3rem', marginRight: '0.2rem' }}
-                  >
-                    {/* Remove */}
-                    <FontAwesomeIcon icon={faXmark} />
+                        <li>
+                            <button onClick={toggleEmployee} className="flex items-center w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2" >
 
-                  </button>
-                )}
-              </div>
-            </div>
+                                <FontAwesomeIcon icon={faUser} size='xl'
+                                    style={{ color: "#2d62be", }} />
+                                <span className="ml-3 pl-2">Employee</span>
+                                <FontAwesomeIcon
+                                    icon={faAngleDown}
+                                    className={`w-5 h-5 ml-auto ${isEmployeeOpen ? 'rotate-0' : 'rotate-180'}`}
+                                />
 
+                            </button>
 
+                            {isEmployeeOpen && (
+                                <ul className="ml-6 space-y-2 font-medium">
+                                    <li>
+                                        <Link href="/subList" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group pl-3">
+                                            <FontAwesomeIcon icon={faClipboardList} size='xl' style={{ color: "#f19513", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-2">Employee List</span>
+                                        </Link>
 
-            <div className="mb-1 md:pl-6" style={{ position: 'relative' }}>
-              <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
-                Audio / ऑडिओ
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="file"
-                  id="audio"
-                  name="audio"
-                  // onChange={handleFileChange}
-                  onChange={(e) => handleFileChange(e, 'audio')}
+                                    </li>
+                                    <li>
+                                        <Link href="/subemp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover-bg-gray-700 group pl-2">
+                                            <FontAwesomeIcon icon={faUserPlus} size='xl'
+                                                style={{ color: "#493927", marginLeft: '15px' }} />
+                                            <span className="ml-3">Add Employee</span>
+                                        </Link>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
 
-                  className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm"
-                  style={{ paddingRight: '2.5rem' }} // Adjust padding to accommodate the button
-                />
-                {formData.audio && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveAudio}
-                    className="absolute text-black font-bold py-1 px-2 rounded-md text-xs md:text-sm"
-                    style={{ right: '0', top: '0', marginTop: '0.3rem', marginRight: '0.2rem' }}
-                  >
-                    {/* Remove */}
-                    <FontAwesomeIcon icon={faXmark} />
-                  </button>
-                )}
-              </div>
-            </div>
+                        <li>
+                            <button
+                                onClick={toggleLead}
+                                className="flex items-center w-full p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group mr-2"
+                            >
+                                <FontAwesomeIcon icon={faLinesLeaning} size='xl'
+                                    style={{ color: "#f1f524", }} />
+                                <span className="ml-3 pl-2">Lead</span>
 
-            <button
-              type="submit"
-              className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              Create Task
-            </button>
-          </form>
-          {errors.length > 0 && (
-            <div className="mt-4">
-              <ul className="text-red-500">
-                {errors.map((error, index) => (
-                  <li key={index}>{error.msg}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  );
-};
+                                <FontAwesomeIcon
+                                    icon={faAngleDown}
+                                    className={`w-5 h-5 ml-auto ${isLeadOpen ? 'rotate-0' : 'rotate-180'}`}
+                                />
+                            </button>
+                            {isLeadOpen && (
+                                <ul className="ml-6 space-y-2 font-medium">
+                                    <li>
+                                        <Link href="/leadForm" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faSquarePlus} size='xl'
+                                                style={{ color: "#f23a3a", marginLeft: '15px' }} />
+                                            <span className="ml-3">Create Lead</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/leadList" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
+                                            <FontAwesomeIcon icon={faBarsStaggered} size='xl'
+                                                style={{ color: "#f29d3a", marginLeft: '15px' }} />
+                                            <span className="ml-3">Lead List</span>
+                                        </Link>
 
-export default TaskForm;
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+        </>
+    )
+}
+
+export default NavSide

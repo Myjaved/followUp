@@ -29,7 +29,6 @@ const SubEmployeeLoginForm = () => {
         setShowPassword(!showPassword);
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -74,7 +73,9 @@ const SubEmployeeLoginForm = () => {
 
                     <form onSubmit={handleSubmit} className="mt-2 space-y-4">
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Email:</label>
+                            <label className="block text-xs md:text-sm font-medium">Email
+                            <span className="text-red-500 pl-1">*</span>
+                            </label>
                             <div className="relative">
                                 <input
                                     type="email"
@@ -91,7 +92,9 @@ const SubEmployeeLoginForm = () => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-xs md:text-sm font-medium">Password:</label>
+                            <label className="block text-xs md:text-sm font-medium">Password
+                            <span className="text-red-500 pl-1">*</span>
+                            </label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? 'text' : 'password'}

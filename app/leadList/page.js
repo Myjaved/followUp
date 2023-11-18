@@ -3,9 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faTrash, faEye,faFileExcel} from '@fortawesome/free-solid-svg-icons';
 import NavSide from '../components/NavSide';
 import Image from 'next/image';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+    const a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    const url = window.URL.createObjectURL(data);
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+};
 
 const LeadList = () => {
   const [leads, setLeads] = useState([]);
@@ -22,7 +34,7 @@ const LeadList = () => {
   const [completeImageUrl, setPreviewImageUrl] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Adjust the number of items per page
+  const [itemsPerPage] = useState(15); // Adjust the number of items per page
 
   const calculateSerialNumber = (index) => {
     return index + (currentPage - 1) * itemsPerPage + 1;
@@ -140,6 +152,40 @@ const LeadList = () => {
     setCurrentPage(pageNumber);
   };
 
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+    
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredLeads.map(lead => {
+      console.log(filteredLeads)
+        return {
+            'CustomerName': lead.customerName,
+            'Description': lead.Description,
+            'ContactNo': lead.contactNo,
+            'Email': lead.email,
+            
+        };
+    });
+
+    
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'AdminLeads List_list' + fileExtension;
+    saveAs(data, fileName);
+};
+
+
   return (
     <>
       <NavSide />
@@ -155,6 +201,14 @@ const LeadList = () => {
             className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/2"
           />
         </div>
+        <div className="relative mb-7 md:mb-12">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredLeads)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded-lg shadow-md">
@@ -162,7 +216,6 @@ const LeadList = () => {
               <tr>
                 <th className=" p-3">Sr.No</th>
                 <th className=" p-3">Customer Name</th>
-                {/* <th className="border border-gray-200 p-3">Company Name</th> */}
                 <th className=" p-3">Description</th>
                 <th className=" p-3">Contact No</th>
                 <th className=" p-3">Email</th>
@@ -170,34 +223,42 @@ const LeadList = () => {
               </tr>
             </thead>
             <tbody>
-              {currentLeads.map((lead, index) => (
+              {leads.length >0 ? (
+              currentLeads.map((lead, index) => (
                 <tr key={lead._id}>
-                  <td className="border border-gray-200 p-3 text-center">{calculateSerialNumber(index)}</td>
-                  <td className="border border-gray-200 p-3">{lead.customerName}</td>
-                  {/* <td className="border border-gray-200 p-3">{lead.companyName}</td> */}
-                  <td className="border border-gray-200 p-3">{lead.description}</td>
-                  <td className="border border-gray-200 p-3">{lead.contactNo}</td>
-                  <td className="border border-gray-200 p-3">{lead.email}</td>
-                  <td className="border border-gray-200 p-3">
+                  <td className="border border-gray-200 px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
+                  <td className="border border-gray-200 px-4 py-2 text-center">{lead.customerName}</td>
+                  <td className="border border-gray-200 px-4 py-2 text-center">{lead.description}</td>
+                  <td className="border border-gray-200 px-4 py-2 text-center">{lead.contactNo}</td>
+                  <td className="border border-gray-200 px-4 py-2 text-center">{lead.email}</td>
+                  <td className="border border-gray-200 px-4 py-2 text-center">
+                    <FontAwesomeIcon
+                      icon={faEye}
+                      className="text-blue-500 hover:underline cursor-pointer"
+                      onClick={() => handleViewClick(lead)}
+                    />
                     <FontAwesomeIcon
                       icon={faPenToSquare}
-                      className="text-orange-500 hover:underline mr-5 pl-5 cursor-pointer"
+                      className="text-orange-500 hover:underline cursor-pointer md:pl-4"
                       onClick={() => handleEditClick(lead)}
                     />
                     <FontAwesomeIcon
                       icon={faTrash}
-                      className="text-red-500 hover:underline mr-5 cursor-pointer pl-5"
+                      className="text-red-500 hover:underline cursor-pointer md:pl-4"
                       onClick={() => handleDeleteLead(lead._id)}
                     />
-                    <FontAwesomeIcon
-                      icon={faEye}
-                      className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5"
-                      onClick={() => handleViewClick(lead)}
-                    />
+
 
                   </td>
                 </tr>
-              ))}
+              ))
+              ):(
+                <tr>
+                  <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                    No any Lead Added
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           <div className="flex justify-center items-center mt-4">

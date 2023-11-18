@@ -1,6 +1,6 @@
 'use client'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDown, faPaperPlane, faTasks, faSquareCheck, faHourglassStart, faExclamationCircle, faPenToSquare, faTableCellsLarge, faUser, faLinesLeaning, faClipboardList, faUserPlus, faBarsStaggered, faSquarePlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faPaperPlane, faTasks, faSquareCheck, faHourglassStart, faExclamationCircle, faPenToSquare, faTableCellsLarge, faUser, faLinesLeaning, faClipboardList, faUserPlus, faBarsStaggered, faSquarePlus, faUpload, faDownload } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect, useCallback } from 'react';
 import { faSignOutAlt, faBell, faEnvelope, faKey } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -180,6 +180,7 @@ const NavSideEmp = () => {
             console.error('Error marking notification as read on the server:', error);
         }
     };
+
     // const handleTaskClick = async (task) => {
     //     setSelectedTask(task);
     //     setShowNotifications(false);
@@ -398,8 +399,8 @@ const NavSideEmp = () => {
                             </Link>
 
                         </div>
-                        <div className="flex items-center">
 
+                        <div className="flex items-center">
                             <button
                                 onClick={toggleLeadDropdown}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none mr-5"
@@ -413,7 +414,7 @@ const NavSideEmp = () => {
                             </button>
 
                             {isLeadDropdownOpen && (
-                                <div className={`origin-bottom-right absolute right-3 md:right-24 ${envelopeNotifications.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-72 top-6 h-28 md:h-28 overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                 <div className={`origin-bottom-right absolute right-3 md:right-24 ${envelopeNotifications.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-72 top-6 ${envelopeNotifications.length > 0 ? 'h-28' : 'h-12'} overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -429,11 +430,9 @@ const NavSideEmp = () => {
                                                     onClick={() => handleLeadNotificationClick(notification)}
                                                 >
                                                     <div className="mx-2 text-xs md:text-sm">
-
                                                         <div className="mb-2"><strong>{notification.message}</strong></div>
                                                         <div className="mb-2"><strong>Title:</strong> {notification.description}</div>
                                                         <div className="mb-2"><strong>Created By:</strong> {notification.assignedByName}</div>
-                                                        {/* Render lead notification content here */}
                                                     </div>
                                                 </div>
                                             ))
@@ -457,10 +456,9 @@ const NavSideEmp = () => {
                                 )}
                             </button>
                             {showNotifications && (
-                                // <div className=" absolute md:right-24 top-12 w-80 max-h-screen rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                                <div className={`origin-bottom-right absolute right-3 md:right-24  ${newTasks.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-68 md:w-80 top-6 h-36 md:h-36 overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
-                                    {/* <div className="origin-top-right absolute right-10 mt-44 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"> */}
-
+                               
+                               <div className={`origin-bottom-right absolute right-3 md:right-20 ${newTasks.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-80 top-6 ${newTasks.length > 0 ? 'h-28' : 'h-12'} overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                                    
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -479,7 +477,7 @@ const NavSideEmp = () => {
                                                         <div className='my-2'><strong>{task.assignedByName}</strong> <span className='mx-4'>{formatDateTime(task.createdAt)}</span></div>
                                                         <div className='my-1'><strong>{task.message}</strong></div>
                                                         <div className='my-1'><strong>Title :</strong> {task.title}</div>
-                                                        <div className='mb-3'><strong>Task ID :</strong> #{task._id.slice(19,)}</div>
+                                                        {/* <div className='mb-3'><strong>Task ID :</strong> #{task._id.slice(19,)}</div> */}
                                                         <hr />
                                                     </div>
                                                 </div>
@@ -803,8 +801,8 @@ const NavSideEmp = () => {
                                 <ul className="ml-6 space-y-2 font-medium">
                                     <li>
                                         <Link href="/receivedTask" className="flex items-center p-2 text-gray-950 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
-                                            <FontAwesomeIcon icon={faTasks} size='xl'
-                                                style={{ color: "purple", marginLeft: '15px' }} />
+                                            <FontAwesomeIcon icon={faDownload} size='xl'
+                                                style={{ color: "rgb(218,165,32)", marginLeft: '15px' }} />
                                             <span className="ml-3 pl-1">Received Tasks</span>
                                         </Link>
                                     </li>
@@ -829,16 +827,17 @@ const NavSideEmp = () => {
                                         <Link href="/overdueByEmployee"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faExclamationCircle} size='xl'
-                                                style={{ color: "#FF5733", marginLeft: '15px' }} />
+                                                style={{ color: "#FF5733", marginLeft: '13px' }} />
                                             <span className="ml-3 pl-1">Overdue Tasks</span>
                                         </Link>
                                     </li>
+                                    
                                     <li>
                                         <Link href="/sendTaskEmp"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
-                                            <FontAwesomeIcon icon={faPaperPlane} size='xl'
-                                                style={{ color: "red", marginLeft: '15px' }} />
-                                            <span className="ml-3 pl-1">Tasks Send</span>
+                                            <FontAwesomeIcon icon={faUpload} size='xl'
+                                                style={{ color: "rgb(255, 215, 0)", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">Send Tasks</span>
                                         </Link>
                                     </li>
                                     <li>

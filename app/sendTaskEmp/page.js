@@ -3,11 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleExclamation, faPenToSquare, faTrash, faEye, faSpinner, faShareNodes } from '@fortawesome/free-solid-svg-icons';
+import { faCircleExclamation, faPenToSquare, faTrash, faEye, faSpinner, faFileExcel,faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'; // Assuming 'faWhatsapp' belongs to the brand icons
+
 import { format, parse, isBefore } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import NavSideEmp from '../components/NavSideEmp';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+    const a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    const url = window.URL.createObjectURL(data);
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+};
 
 
 
@@ -65,9 +79,9 @@ const ShareButton = ({ task }) => {
     return (
         <button
             onClick={handleShareClick}
-            className="text-green-800 hover:underline cursor-pointer"
+            className="text-green-600 cursor-pointer text-xl"
         >
-            <FontAwesomeIcon icon={faShareNodes} />
+            <FontAwesomeIcon icon={faWhatsapp} />
         </button>
     );
 };
@@ -81,6 +95,8 @@ const sendTaskEmp = () => {
     const [loading, setLoading] = useState(true); // Add a loading state
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [completeImageUrl, setPreviewImageUrl] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [tasksPerPage] = useState(15); // Set the number of tasks to display per page
 
 
     let serialNumber = 1;
@@ -264,30 +280,77 @@ const sendTaskEmp = () => {
         }
     };
 
+    const indexOfLastTask = currentPage * tasksPerPage;
+    const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+    const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+    // Function to change page
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const exportToExcel = async () => {
+        const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const fileExtension = '.xlsx';
+
+     
+
+        // Filter and map the data including the header fields and employee names
+        const tasksToExport = filteredTasks.map(task => {
+            return {
+                'Title': task.title,
+                'Status': task.status,
+                'StartDate': task.startDate,
+                'DeadLine': task.deadlineDate,
+                'AssignTo': task.assignTo, // Assign the name if available, otherwise use the ID
+            };
+        });
+
+        // Create a worksheet from the filtered task data
+        const ws = XLSX.utils.json_to_sheet(tasksToExport);
+        const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+        // Convert the workbook to an array buffer
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+        // Create a Blob from the array buffer
+        const data = new Blob([excelBuffer], { type: fileType });
+
+        // Set the filename and save the file using saveAs function
+        const fileName = 'Send Tasks_list' + fileExtension;
+        saveAs(data, fileName);
+    };
+
     return (
         <>
             <NavSideEmp />
-            <div className="m-5 pl-0 md:pl-64 mt-20">
-                <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">Send Tasks</h1>
+            <div className="m-5 pl-0 md:pl-64 mt-16">
+                <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left ">Send Tasks</h1>
                 <div className="flex justify-center items-center mb-4">
                     <input
                         type="text"
                         placeholder="Search Tasks"
-                        className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/2"
+                        className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/3"
                         value={searchQuery}
                         onChange={handleSearchInputChange}
                     />
                 </div>
+               
 
-
-                <div className="relative mb-16 md:mb-16">
+                <div className="relative mb-16 md:mb-16 md:-mt-10">
                     <button
-                        className="bg-orange-500 text-white font-bold py-1 px-5 md:px-7 rounded-lg absolute top-2 right-3"
-                        onClick={() => router.push('/taskForm')}
+            className="bg-green-500 text-white font-bold py-1 px-5 md:px-4 rounded-lg absolute top-2 right-3 md:right-0 md:-mt-4"
+            onClick={() => router.push('/taskFormInternal')}
                     >
-                        Add Task
+                         <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Add Task</span>
                     </button>
                 </div>
+                <div className="relative mb-7 md:mb-14">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-16 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
 
 
                 {loading ? (
@@ -313,48 +376,64 @@ const sendTaskEmp = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTasks.map((task) => (
-                                    <tr key={task._id} className="hover:bg-gray-100">
-                                        <td className="border px-4 py-2 text-center">{serialNumber++}</td>
-                                        <td className="border px-4 py-2">{task.title}</td>
-                                        <td className="text-center border px-2 py-1">
-                                            <span className={`rounded-full font-semibold px-5 py-1 ${task.status === 'completed' ? 'text-green-800 bg-green-200' :
-                                                task.status === 'overdue' ? 'text-red-800 bg-red-200' :
-                                                    task.status === 'pending' ? 'text-blue-800 bg-blue-200' :
-                                                        ''
-                                                }`}>
-                                                {task.status}
-                                            </span>
-                                        </td>
-                                        <td className="border px-4 py-2">{task.startDate}</td>
-                                        <td className="border px-4 py-2">{formatDate(task.deadlineDate)}</td>
-                                        <td className="border px-4 py-2">{task.assigneeName}</td>
-                                        <td className="border px-4 py-2">
-                                            {/* <FontAwesomeIcon
-                                                icon={faPenToSquare}
-                                                className="text-orange-500 hover:underline mr-3 cursor-pointer"
-                                                onClick={() => handleEdit(task._id)}
-                                            /> */}
-                                            <div style={{display:'flex'}}>
-                                            <FontAwesomeIcon
-                                                icon={faEye}
-                                                className="text-blue-500 hover:underline mr-3 cursor-pointer"
-                                                onClick={() => handleViewClick(task._id)}
-                                            />
-                                            <FontAwesomeIcon
-                                                icon={faTrash}
-                                                className="text-red-500 hover:underline mr-3 cursor-pointer"
-                                                onClick={() => handleDeleteClick(task._id)}
-                                            />
-                                            <ShareButton task={task} />
-                                            </div>
+                                {currentTasks.length > 0 ? (
+                                    currentTasks.map((task) => (
+                                        <tr key={task._id} className="hover:bg-gray-100">
+                                            <td className="border px-4 py-2 text-center">{serialNumber++}</td>
+                                            <td className="border px-4 py-2">{task.title}</td>
+                                            <td className="text-center border px-2 py-1">
+                                                <span className={`rounded-full font-semibold px-5 py-1 ${task.status === 'completed' ? 'text-green-800 bg-green-200' :
+                                                    task.status === 'overdue' ? 'text-red-800 bg-red-200' :
+                                                        task.status === 'pending' ? 'text-blue-800 bg-blue-200' :
+                                                            ''
+                                                    }`}>
+                                                    {task.status}
+                                                </span>
+                                            </td>
+                                            <td className="border px-4 py-2">{task.startDate}</td>
+                                            <td className="border px-4 py-2">{formatDate(task.deadlineDate)}</td>
+                                            <td className="border px-4 py-2">{task.assigneeName}</td>
+                                            <td className="border px-4 py-2 ">
+
+                                                {/* <div style={{display:'flex'}}> */}
+                                                <FontAwesomeIcon
+                                                    icon={faEye}
+                                                    className="text-blue-500 hover:underline mr-3 text-lg cursor-pointer pl-6"
+                                                    onClick={() => handleViewClick(task._id)}
+                                                />
+                                                <FontAwesomeIcon
+                                                    icon={faTrash}
+                                                    className="text-red-500 hover:underline mr-3 text-lg cursor-pointer"
+                                                    onClick={() => handleDeleteClick(task._id)}
+                                                />
+                                                <ShareButton task={task} />
+                                                {/* </div> */}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                                            No any Task Added
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>
                 )}
+                <div className="flex justify-center items-center mt-4">
+                    {Array.from({ length: Math.ceil(tasks.length / tasksPerPage) }, (_, index) => (
+                        <button
+                            key={index}
+                            className={`px-4 py-2 mx-2 bg-blue-200 text-white rounded-md ${currentPage === index + 1 ? 'bg-blue-700' : ''}`}
+                            onClick={() => paginate(index + 1)}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+
 
                 {isViewModalOpen && (
                     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
@@ -491,68 +570,3 @@ const sendTaskEmp = () => {
 };
 
 export default sendTaskEmp;
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import NavSideEmp from '../components/NavSideEmp';
-
-// const SendTaskEmp = () => {
-//     const [tasks, setTasks] = useState([]);
-
-//     useEffect(() => {
-//         const fetchTasks = async () => {
-//             try {
-//                 const token = localStorage.getItem('authToken');
-//                 const headers = { Authorization: token };
-//                 const response = await axios.get('http://localhost:5000/api/task/list/subemployee/sendTasks', { headers });
-
-//                 setTasks(response.data.tasks);
-//             } catch (error) {
-//                 console.error('Error fetching tasks:', error);
-//             }
-//         };
-
-//         fetchTasks();
-//     }, []);
-
-//     return (
-//         <>
-
-//             <NavSideEmp />
-//             <div className="m-5 pl-0 md:pl-64 mt-20">
-//                 <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">Send Tasks</h1>
-//                 <div className="overflow-x-auto">
-//                     <table className="min-w-full border-collapse border border-gray-300">
-//                         <thead className='bg-orange-400 text-white'>
-//                             <tr>
-//                                 <th className="px-4 py-2 text-center">Sr.No.</th>
-//                                 <th className="px-4 py-2 text-center">Title</th>
-//                                 <th className="px-4 py-2 text-center">Status</th>
-//                                 {/* <th className="px-4 py-2 text-center">Description</th> */}
-//                                 <th className="px-4 py-2 text-center">StartDate</th>
-//                                 <th className="px-4 py-2 text-center">Deadline</th>
-//                                 <th className="px-4 py-2 text-center">AssignTo</th>
-//                                 {/* <th className="px-4 py-2 text-center">Actions</th> */}
-//                             </tr>
-//                         </thead>
-//                         <tbody>
-//                             {tasks.map((task, index) => (
-//                                 <tr key={index}>
-//                                     <td className="border border-gray-300 p-2">{index+1}</td>
-//                                     <td className="border border-gray-300 p-2">{task.title}</td>
-//                                     <td className="border border-gray-300 p-2">{task.status}</td>
-//                                     {/* <td className="border border-gray-300 p-2">{task.description}</td> */}
-//                                     <td className="border border-gray-300 p-2">{task.startDate}</td>
-//                                     <td className="border border-gray-300 p-2">{task.deadLineDate}</td>
-//                                     <td className="border border-gray-300 p-2">{task.assignTo}</td>
-//                                 </tr>
-//                             ))}
-//                         </tbody>
-//                     </table>
-//                 </div>
-//             </div>
-//         </>
-//     );
-// };
-
-// export default SendTaskEmp;

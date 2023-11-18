@@ -3,10 +3,20 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { faEye } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare,faPlus,faTrash,faEye,faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import NavSide from '../components/NavSide';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+    const a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    const url = window.URL.createObjectURL(data);
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+};
 
 
 const EmployeeList = () => {
@@ -20,14 +30,13 @@ const EmployeeList = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  let serialNumber = 1; // Initialize the serial number
   const calculateSerialNumber = (index) => {
     return index + (currentPage - 1) * employeesPerPage + 1;
   };
   const [searchQuery, setSearchQuery] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [employeesPerPage] = useState(5); // Change the number as per your preference
+  const [employeesPerPage] = useState(15); // Change the number as per your preference
 
 
   const paginate = (pageNumber) => {
@@ -190,6 +199,38 @@ const EmployeeList = () => {
     // Redirect to the "Add Employee" page
     router.push('/subemp');
   };
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+    
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredEmployees.map(employee => {
+      console.log(filteredEmployees)
+        return {
+            'EmployeeName': employee.name,
+            'Email': employee.email,
+            'PhoneNumber': employee.phoneNumber,
+            
+            
+        };
+    });
+
+    
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'AdminLeads List_list' + fileExtension;
+    saveAs(data, fileName);
+};
 
   return (
     <>
@@ -218,58 +259,72 @@ const EmployeeList = () => {
             onChange={handleSearchInputChange}
           />
         </div>
+       
 
-        <div className="relative mb-10 md:mb-12">
+        <div className="relative mb-16 md:mb-16 md:-mt-10">
           <button
-            className="bg-orange-500 text-white font-bold py-0.5 px-3 rounded-lg absolute top-2 right-1"
+            className="bg-green-500 text-white font-bold py-1 px-5 md:px-4 rounded-lg absolute top-2 right-3 md:right-0 md:-mt-4"
             onClick={handleAddClick}
           >
-            Add Employee
-
+            <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Add New</span>
+          </button>
+        </div>
+        <div className="relative mb-7 md:mb-14">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-16 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredEmployees)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
           </button>
         </div>
 
+
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto mt-1">
-            <thead>
+            <thead className='bg-orange-400 text-white'>
               <tr>
-                <th className="px-1 py-2 text-center text-gray-800">Sr.No.</th>
-                <th className="px-4 py-2 text-left text-gray-800">Name</th>
-                <th className="px-4 py-2 text-left text-gray-800">Email</th>
-                <th className="px-4 py-2 text-left text-gray-800">Phone Number</th>
-                {/* <th className="px-4 py-2 text-left text-gray-800">Company Name</th> */}
-                <th className="px-4 py-2 text-center text-gray-800">Actions</th>
+                <th className="px-1 py-2 text-center text-gray-700">Sr.No.</th>
+                <th className="px-4 py-2 text-center text-gray-700">Name</th>
+                <th className="px-4 py-2 text-center text-gray-700">Email</th>
+                <th className="px-4 py-2 text-center text-gray-700">PhoneNumber</th>
+                <th className="px-4 py-2 text-center text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentEmployees.map((employee,index) => (
+              {employees.length >0 ? (
+              currentEmployees.map((employee,index) => (
                 <tr key={employee._id}>
                   <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
-                  <td className="border px-4 py-2 text-left">{employee.name}</td>
-                  <td className="border px-4 py-2">{employee.email}</td>
-                  <td className="border px-4 py-2">{employee.phoneNumber}</td>
-                  {/* <td className="border px-4 py-2">{employee.adminCompanyName}</td> */}
+                  <td className="border px-4 py-2 text-center">{employee.name}</td>
+                  <td className="border px-4 py-2 text-center">{employee.email}</td>
+                  <td className="border px-4 py-2 text-center">{employee.phoneNumber}</td>
                   <td className="border px-4 py-2">
-
-
                     <FontAwesomeIcon
                       icon={faEye}
-                      className="text-blue-500 hover:underline cursor-pointer mr-3 pl-6"
+                      className="text-blue-500 hover:underline cursor-pointer mr-3 pl-4 text-lg"
                       onClick={() => handleViewClick(employee._id)}
                     />
                     <FontAwesomeIcon
                       icon={faPenToSquare}
-                      className="text-orange-500 hover:underline cursor-pointer mr-3"
+                      className="text-orange-500 hover:underline cursor-pointer mr-3 text-lg"
                       onClick={() => handleEditClick(employee._id)}
                     />
                     <FontAwesomeIcon
                       icon={faTrash}
-                      className="text-red-500 hover:underline cursor-pointer -mr-16"
+                      className="text-red-500 hover:underline cursor-pointer -mr-16 text-lg"
                       onClick={() => handleDeleteClick(employee._id)}
                     />
                   </td>
                 </tr>
-              ))}
+              ))
+              ):(
+                <tr>
+                  <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                    No Employee Added Yet
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
 
@@ -286,8 +341,8 @@ const EmployeeList = () => {
               ))}
             </div>
           )}
-
         </div>
+
 
         {/* Edit Employee Modal */}
         {isEditModalOpen && (

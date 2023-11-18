@@ -273,20 +273,17 @@ const NavSideSuper = () => {
         <>
             <nav className="fixed top-0 right-0 z-50 w-full bg-gray-300 text-black border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
-                    {/* <div className="flex items-center lg:justify-between sm:justify-between"> */}
                     <div className="flex items-center justify-between">
 
                         <div className="flex items-center justify-start">
-
                             <button onClick={toggleSidebar} data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                                 <span className="sr-only">Open sidebar</span>
                                 <svg className="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path clipRule="evenodd" fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
                                 </svg>
                             </button>
-                            <Link href="https://flowbite.com" className="flex ml-2 md:mr-24">
-                                {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
-                                <span className="self-center text-base md:text-xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-red-800">SuperAdmin</span>
+                            <Link href="#" className="flex ml-2 md:mr-24">
+                                <span className="self-center text-base md:text-xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-gray-900">SuperAdmin</span>
                             </Link>
                         </div>
 
@@ -400,8 +397,8 @@ const NavSideSuper = () => {
                             className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover-bg-gray-200 hover-text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark-hover-bg-gray-600 dark-hover-text-white"
                             onClick={() => closeModal()}
                         >
-                            {/* Close button icon */}
                         </button>
+
                         <div className="p-1 text-center">
                             <h3 className="mb-5 text-lg font-semibold text-gray-800 dark-text-gray-400">
                                 Task Details
@@ -508,7 +505,7 @@ const NavSideSuper = () => {
                         <h2 className="text-lg md:text-xl font-semibold mb-4 ">Change Password</h2>
                         <form>
                             <div className="form-group mb-4">
-                                <label htmlFor="email" className="block text-gray-700 text-sm md:text-base">Email:</label>
+                                <label htmlFor="email" className="block text-gray-700 text-sm md:text-base">Email <span className="text-red-500">*</span></label>
                                 <input
                                     type="email"
                                     id="email"
@@ -517,13 +514,14 @@ const NavSideSuper = () => {
                                     className={`w-full p-2 border text-xs md:text-base rounded py-1 ${changePasswordErrors.email ? 'border-red-500' : ''}`}
                                     value={changePasswordData.email}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, email: e.target.value })}
+                                    required
                                 />
                                 {changePasswordErrors.email && (
                                     <div className="text-red-500">{changePasswordErrors.email}</div>
                                 )}
                             </div>
                             <div className="form-group mb-4">
-                                <label htmlFor="currentPassword" className="block text-gray-700 text-sm md:text-base">Current Password:</label>
+                                <label htmlFor="currentPassword" className="block text-gray-700 text-sm md:text-base">Current Password<span className="text-red-500">*</span></label>
                                 <input
                                     type="password"
                                     id="currentPassword"
@@ -532,13 +530,14 @@ const NavSideSuper = () => {
                                     className={`w-full p-2 border text-xs md:text-base rounded py-1 ${changePasswordErrors.currentPassword ? 'border-red-500' : ''}`}
                                     value={changePasswordData.currentPassword}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, currentPassword: e.target.value })}
+                                    required
                                 />
                                 {changePasswordErrors.currentPassword && (
                                     <div className="text-red-500">{changePasswordErrors.currentPassword}</div>
                                 )}
                             </div>
                             <div className="form-group mb-4">
-                                <label htmlFor="newPassword" className="block text-gray-700 text-sm md:text-base">New Password:</label>
+                                <label htmlFor="newPassword" className="block text-gray-700 text-sm md:text-base">New Password<span className="text-red-500">*</span></label>
                                 <input
                                     type="password"
                                     id="newPassword"
@@ -547,6 +546,7 @@ const NavSideSuper = () => {
                                     className={`w-full p-2 border text-xs md:text-base rounded py-1 ${changePasswordErrors.newPassword ? 'border-red-500' : ''}`}
                                     value={changePasswordData.newPassword}
                                     onChange={(e) => setChangePasswordData({ ...changePasswordData, newPassword: e.target.value })}
+                                    required
                                 />
                                 {changePasswordErrors.newPassword && (
                                     <div className="text-red-500">{changePasswordErrors.newPassword}</div>
@@ -574,8 +574,7 @@ const NavSideSuper = () => {
             )}
 
 
-
-
+            {/* SideBar Content */}
             <aside id="logo-sidebar" className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
@@ -606,7 +605,7 @@ const NavSideSuper = () => {
                                             <FontAwesomeIcon icon={faListUl} size='xl'
                                                 style={{ color: 'red', marginLeft: '5px' }}
                                             />
-                                            <span className='ml-3'>Companies List</span>
+                                            <span className='ml-3'>Company List</span>
 
                                         </Link>
                                     </li>
@@ -648,7 +647,7 @@ const NavSideSuper = () => {
                                         <Link href="/employee" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover-bg-gray-700 group">
                                         
                                             <FontAwesomeIcon icon={faUserPlus} size='xl'
-                                                style={{ color: 'blue', marginLeft: '8px' }}
+                                                style={{ color: 'indigo', marginLeft: '11px' }}
                                                 onClick={() => handleDeleteClick(company._id)}
                                             />
                                             <span className='pl-1 ml-1'> Add Admin</span>

@@ -402,7 +402,8 @@ const sendTasks = () => {
                 </tr>
               </thead>
               <tbody>
-                {getTasksForCurrentPage().map((task, index) => (
+                {tasks.length >0 ? (
+                getTasksForCurrentPage().map((task, index) => (
                   <tr key={task._id} className="hover:bg-gray-100">
                     <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                     <td className="border px-4 py-2 font-semibold">{task.title}</td>
@@ -438,7 +439,14 @@ const sendTasks = () => {
                       <ShareButton task={task} />
                     </td>
                   </tr>
-                ))}
+                ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="px-4 py-2 text-center border font-semibold">
+                      No any task send.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
             <div className="flex justify-center mt-4">
@@ -464,6 +472,9 @@ const sendTasks = () => {
                 <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-400 text-center">Task Details</h3>
                 {viewTask && (
                   <div>
+                    <p className="mb-2 text-left justify-center ">
+                      <strong>AssignedBy:</strong> {viewTask.assignedBy.name}
+                    </p>
                     <p className="mb-2 text-left justify-center ">
                       <strong>AssignTo:</strong> {viewTask.assigneeName}
                     </p>

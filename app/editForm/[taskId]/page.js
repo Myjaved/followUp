@@ -19,6 +19,9 @@ const EditForm = ({ params }) => {
     const [audioFile, setAudioFile] = useState(null); // State for the new audio file
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [completeImageUrl, setPreviewImageUrl] = useState('');
+    const [isErrorModalOpen, setIsErrorModalOpen] = useState(false); // Add state for error modal
+    const [error, setError] = useState(''); // Add state for error message
+    
 
     useEffect(() => {
         // Fetch task data by taskId when the component mounts
@@ -76,16 +79,49 @@ const EditForm = ({ params }) => {
     }, [taskId]);
     console.log(taskId)
 
+    // const handleFormSubmit = async (e) => {
+    //     e.preventDefault();
+
+    //     const formData = new FormData();
+    //     formData.append('taskData', JSON.stringify(taskData));
+    //     formData.append('picture', pictureFile); // Assuming pictureFile holds the file object
+    //     if (audioFile) {
+    //         formData.append('audio', audioFile); // Assuming 'audio' is the key name on the server for audio files
+    //     }
+    //     console.log(pictureFile)
+
+    //     try {
+    //         const authToken = localStorage.getItem('authToken');
+
+    //         const response = await fetch(`http://localhost:5000/api/task/edit/${taskId}`, {
+    //             method: 'PUT',
+    //             headers: {
+    //                 Authorization: authToken,
+    //             },
+    //             body: formData, // Set the form data here
+    //         });
+
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             console.log('Task updated successfully:', data);
+    //             router.push(`/taskList`);
+    //         } else {
+    //             console.error('Failed to update task');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //     }
+    // };
+
     const handleFormSubmit = async (e) => {
         e.preventDefault();
 
         const formData = new FormData();
         formData.append('taskData', JSON.stringify(taskData));
-        formData.append('picture', pictureFile); // Assuming pictureFile holds the file object
+        formData.append('picture', pictureFile);
         if (audioFile) {
-            formData.append('audio', audioFile); // Assuming 'audio' is the key name on the server for audio files
+            formData.append('audio', audioFile);
         }
-        console.log(pictureFile)
 
         try {
             const authToken = localStorage.getItem('authToken');
@@ -95,7 +131,7 @@ const EditForm = ({ params }) => {
                 headers: {
                     Authorization: authToken,
                 },
-                body: formData, // Set the form data here
+                body: formData,
             });
 
             if (response.ok) {
@@ -103,10 +139,21 @@ const EditForm = ({ params }) => {
                 console.log('Task updated successfully:', data);
                 router.push(`/taskList`);
             } else {
-                console.error('Failed to update task');
+                if (response.status === 401) {
+                    // Unauthorized user error
+                    setError('You are not authorized to update this task.');
+                    setIsErrorModalOpen(true);
+                } else {
+                    // Other errors
+                    console.error('Failed to update task');
+                    setError('Not Authorised to Update Task !'); // Update error state with a general message
+                    setIsErrorModalOpen(true);
+                }
             }
         } catch (error) {
             console.error('Error:', error);
+            setError('An error occurred'); // Update error state with a general message
+            setIsErrorModalOpen(true);
         }
     };
 
@@ -130,6 +177,10 @@ const EditForm = ({ params }) => {
         setTaskData({ ...taskData, audio: newAudioFile.name });
     };
 
+    const handleErrorModalClose = () => {
+        setIsErrorModalOpen(false);
+    };
+
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -138,6 +189,29 @@ const EditForm = ({ params }) => {
     return (
         <>
             <NavSide />
+
+            {isErrorModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg">
+                        <button
+                            type="button"
+                            className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                            onClick={handleErrorModalClose}
+                        ></button>
+                        <div className="p-2 text-center">
+                            <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Error</h3>
+                            <p className="mb-3 text-center justify-center mt-3">{error}</p>
+                            <button
+                                type="button"
+                                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2 text-xs md:text-base"
+                                onClick={handleErrorModalClose}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="w-full md:flex justify-center items-center min-h-screen md:mt-5 md:pl-28 bg-slate-50">
                 <div className="w-full md:max-w-2xl overflow-x-auto border border-gray-200 rounded-lg p-5 bg-white mt-16">
                     {successMessage && (<div className="mb-4 text-green-500">{successMessage}</div>)}

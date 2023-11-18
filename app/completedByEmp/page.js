@@ -3,13 +3,22 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import EmployeeSidebar from '../components/EmployeeSidebar';
+import { faEye, faSpinner,faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import NavSideEmp from '../components/NavSideEmp';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 
 const CompletedTaskList = () => {
@@ -19,6 +28,17 @@ const CompletedTaskList = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(15); // Number of tasks per page
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * tasksPerPage + 1;
+  };
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1); // Reset to the first page when searching
+  };
 
   const handlePicturePreview = (imageUrl) => {
     const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
@@ -69,15 +89,73 @@ const CompletedTaskList = () => {
   };
 
   // Check if the "subUsername" key exists in localStorage
-  const hideActions = typeof window !== 'undefined' ? window.localStorage.getItem('subUsername') : null;
+  // const hideActions = typeof window !== 'undefined' ? window.localStorage.getItem('subUsername') : null;
 
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+
+  const filteredTasks = completedTasks.filter((task) =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  // Function to handle page change
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+    
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredTasks.map(task => {
+      return {
+        'Title': task.title,
+        'Status': task.status,
+        'StartDate': task.startDate,
+        'DeadLine': task.deadlineDate,
+        'AssignTo':  task.assignTo, // Assign the name if available, otherwise use the ID
+      };
+    });
+
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'Completed Task_list' + fileExtension;
+    saveAs(data, fileName);
+  };
   return (
     <>
-      {/* <Navbar /> */}
-      {/* <EmployeeSidebar /> */}
       <NavSideEmp />
       <div className="m-5 pl-5 md:pl-72 mt-20">
         <h1 className="text-2xl font-semibold mb-4 text-orange-500">Completed Task List</h1>
+
+        <div className="flex justify-center items-center mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search by Task Title..."
+            className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/3"
+          />
+        </div>
+        <div className="relative mb-7 md:mb-10">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
+
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
@@ -88,25 +166,24 @@ const CompletedTaskList = () => {
           </div>
         ) : (
           <div>
-            {completedTasks.length === 0 ? (
-              <p className="text-gray-600">No completed tasks found.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full table-auto">
-                  <thead className='bg-green-500 text-white'>
-                    <tr>
-                      <th className="px-4 py-2">Sr. No.</th>
-                      <th className="px-4 py-2">Task</th>
-                      <th className="px-4 py-2">Description</th>
-                      <th className="px-4 py-2">Assigned To</th>
-                      <th className="px-4 py-2">Status</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {completedTasks.map((task, index) => (
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto">
+                <thead className='bg-green-500 text-white'>
+                  <tr>
+                    <th className="px-4 py-2">Sr.No.</th>
+                    <th className="px-4 py-2">Task</th>
+                    <th className="px-4 py-2">Description</th>
+                    <th className="px-4 py-2">Assigned To</th>
+                    <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentTasks.length > 0 ? (
+                    currentTasks.map((task, index) => (
                       <tr key={task._id}>
-                        <td className="border border-green-500 px-4 py-2 text-center">{index + 1}</td>
+                        <td className="border border-green-500 px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                         <td className="border border-green-500  px-4 py-2">
                           <div>
                             <h2 className="text-base border-green-500  font-medium text-blue-800 text-left">{task.title}</h2>
@@ -129,14 +206,37 @@ const CompletedTaskList = () => {
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                        No Completed Tasks Found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
           </div>
         )}
+        <ul className="flex justify-center items-center mt-4">
+          {Array.from({ length: Math.ceil(filteredTasks.length / tasksPerPage) }, (_, index) => (
+            <li key={index} className="px-3 py-2">
+              <button
+                onClick={() => paginate(index + 1)}
+                className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                  } px-4 py-2 rounded`}
+              >
+                {index + 1}
+              </button>
+            </li>
+          )
+          )}
+        </ul>
+
       </div>
+
 
       {/* View Task Modal */}
       {viewTask && (

@@ -36,7 +36,7 @@ const CompletedTaskList = () => {
   const [filteredTasks, setFilteredTasks] = useState([]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const tasksPerPage = 10; // Number of tasks to display per page
+  const tasksPerPage = 15; // Number of tasks to display per page
 
   const calculateSerialNumber = (index) => {
     return index + 1 + (currentPage - 1) * tasksPerPage;
@@ -332,17 +332,15 @@ const CompletedTaskList = () => {
           </div>
         ) : (
           <div>
-            {currentTasks.length === 0 ? (
-              <p className="text-gray-600">No completed tasks found.</p>
-            ) : (
+            
               <div className="overflow-x-auto">
                 <table className="min-w-full table-auto">
-                  <thead>
+                  <thead className='bg-orange-500 text-white'>
                     <tr>
                       <th className="px-4 py-2">Sr. No.</th>
-                      <th className="px-4 py-2">Task</th>
+                      <th className="px-4 py-2">Task Title</th>
                       <th className="px-4 py-2">Status</th>
-                      <th className="px-4 py-2">Date</th>
+                      <th className="px-4 py-2">StartedDate</th>
                       <th className="px-4 py-2">DeadLine</th>
                       <th className="px-4 py-2">Assigned To</th>
                       {!hideActions ? (
@@ -351,7 +349,8 @@ const CompletedTaskList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentTasks.map((task, index) => (
+                    {completedTasks.length >0 ? (
+                    currentTasks.map((task, index) => (
                       <tr key={task._id}>
                         <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
                         <td className="border px-4 py-2">
@@ -366,7 +365,7 @@ const CompletedTaskList = () => {
                         </td>
                         <td className="border px-4 py-2 text-center">{formatDateList(task.startDate)}</td>
                         <td className="border px-4 py-2 text-center">{formatDateList(task.deadlineDate)}</td>
-                        <td className="border px-4 py-2 text-center">{task.assignTo}</td>
+                        <td className="border px-4 py-2 text-center font-semibold">{task.assignTo}</td>
                         <td className={`border px-4 py-2 text-center ${hideActions ? 'hidden' : ''}`}>
                           {!hideActions && (
                             <div className="flex items-center">
@@ -387,11 +386,18 @@ const CompletedTaskList = () => {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    ):(
+                      <tr>
+                        <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                        No Completed Tasks Found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-            )}
+            
 
             <div className="flex justify-center mt-4">
               {Array.from({ length: totalPages }).map((_, index) => (

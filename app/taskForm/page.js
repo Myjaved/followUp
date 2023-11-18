@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -7,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import jwt_decode from 'jwt-decode';
 import NavSide from '../components/NavSide';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faCircleCheck, faCaretDown,faSearch } from '@fortawesome/free-solid-svg-icons';
-
+import { faXmark, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import Select from 'react-select';
 
 const decodedToken = typeof window !== 'undefined' ? jwt_decode(localStorage.getItem('authToken')) : null;
 
@@ -21,8 +20,10 @@ const getCurrentTimeIn12HourFormat = () => {
 const TaskForm = () => {
   const router = useRouter();
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false); // State to manage error modal
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+
   const handleModalClose = () => {
     setIsSuccessModalOpen(false);
     router.push('/taskList');
@@ -39,7 +40,6 @@ const TaskForm = () => {
     assignedBy: decodedToken?.employeeId,
   });
 
-  
   const [errors, setErrors] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
   const [subemployees, setSubemployees] = useState([]);
@@ -78,25 +78,50 @@ const TaskForm = () => {
 
     setCurrentStartTime(getCurrentTimeIn12HourFormat());
 
-    // Set current end time when the component mounts
-    setCurrentEndTime(getCurrentTimeIn12HourFormat());
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
+
+    setCurrentEndTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }));
+
   }, []);
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value)
-  }
+  // const handleSearchChange = (e) => {
+  //   setSearchQuery(e.target.value)
+  // }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  // const handleInputChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData({
+  //     ...formData,
+  //     [name]: value,
+  //   });
+  // };
+
+  const handleInputChange = (selectedOptions) => {
+    if (Array.isArray(selectedOptions)) {
+      // Handling the case when the input is from the Select component
+      const selectedEmployeeIds = selectedOptions.map(option => option.value);
+
+      setFormData({
+        ...formData,
+        assignTo: selectedEmployeeIds,
+      });
+
+      setSelectedEmployees(selectedOptions);
+    } else {
+      // Handling the case when the input is from a regular input element
+      const { name, value } = selectedOptions.target;
+
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
-  const filteredEmployees = subemployees.filter(subemployee => {
-    return subemployee.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  // const filteredEmployees = subemployees.filter(subemployee => {
+  //   return subemployee.name.toLowerCase().includes(searchQuery.toLowerCase());
+  // });
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
@@ -132,11 +157,25 @@ const TaskForm = () => {
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen)
   }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const selectedStartTime = new Date(`${formData.startDate} ${currentStartTime}`);
+    console.log(selectedStartTime);
+
     if (!formData.assignTo) {
       // Handle the case where no subemployee is selected
+      return;
+    }
+
+    const currentDate = new Date();
+
+    if (selectedStartTime < currentDate) {
+      // Show an error message that the selected date or time is in the past
+      setErrors([{ msg: 'Selected start date or time cannot be in the past' }]);
+      setIsErrorModalOpen(true); // Open the error modal
+
       return;
     }
 
@@ -144,8 +183,8 @@ const TaskForm = () => {
     const phoneNumber = selectedSubemployee ? selectedSubemployee.phoneNumber : null;
 
 
-    console.log(selectedSubemployee)
-    
+    console.log("selectedSubemployee", selectedEmployees)
+
     const requestBody = {
       title: formData.title,
       description: formData.description,
@@ -160,7 +199,7 @@ const TaskForm = () => {
       audio: formData.audio
     };
 
-    
+    console.log("requestBody", requestBody)
     try {
       const response = await axios.post('http://localhost:5000/api/task/create', requestBody, {
         headers: {
@@ -199,13 +238,18 @@ const TaskForm = () => {
         // router.push('/taskList');
       }
     } catch (error) {
+      console.error('Task creation failed:', error);
       if (error.response && error.response.data && error.response.data.errors) {
         setErrors(error.response.data.errors);
       } else {
         setErrors([{ msg: 'Internal Server Error' }]);
       }
+      setIsErrorModalOpen(true);
     }
+  };
 
+  const handleErrorModalClose = () => {
+    setIsErrorModalOpen(false);
   };
 
   return (
@@ -234,6 +278,36 @@ const TaskForm = () => {
           </div>
         </div>
       )}
+
+      {isErrorModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg" onClick={handleErrorModalClose}>
+            <button
+              type="button"
+              className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+              onClick={handleErrorModalClose}
+            ></button>
+            <div className="p-2 text-center">
+              {/* Customize this section to display your error message */}
+              <FontAwesomeIcon icon={faXmark} className='text-3xl md:text-5xl text-red-600 mt-2' />
+              <ul className="text-red-500">
+                {errors.map((error, index) => (
+                  <li key={index}>{error.msg}</li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2 text text-xs md:text-base"
+                onClick={handleErrorModalClose}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* <div className="w-full flex justify-center items-center min-h-screen mt-12 pl-28"> */}
       <div className="w-full md:flex justify-center items-center min-h-screen md:mt-0 md:pl-28 bg-slate-50">
         {/* <div className=" max-w-2xl overflow-x-auto border border-red-200 rounded-lg p-5 bg-gray-50"> */}
@@ -271,11 +345,12 @@ const TaskForm = () => {
             />
           </div>
 
+
           <div className="mb-2">
             <label htmlFor="assignTo" className="block font-semibold text-xs lg:text-sm">
               Assign To / नियुक्त करा <span className="text-red-500">*</span>
             </label>
-            <select
+            {/* <select
               id="assignTo"
               name="assignTo"
               value={formData.assignTo}
@@ -291,9 +366,19 @@ const TaskForm = () => {
                   {subemployee.name}
                 </option>
               ))}
-            </select>
+            </select> */}
+            <Select
+              isMulti
+              options={subemployees.map(subemployee => ({
+                value: subemployee.id,
+                label: subemployee.name,
+              }))}
+              value={selectedEmployees}
+              onChange={(selectedOptions) => handleInputChange(selectedOptions || [])}
+              className="border-2 border-gray-200 rounded-md px-3 py-1 w-full"
+            />
           </div>
-          {/*  */}
+
 
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
             <div className="mb-1">
@@ -371,7 +456,7 @@ const TaskForm = () => {
 
             <div className="mb-1">
               <label htmlFor="deadlineDate" className="block font-semibold text-xs lg:text-sm">
-                Deadline /अंतिम दिनांक <span className="text-red-500">*</span>
+                DeadLine /अंतिम दिनांक <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -500,18 +585,6 @@ const TaskForm = () => {
                 )}
               </div>
             </div>
-            {/* <div className="mb-1 md:pl-6">
-              <label htmlFor="audio" className="block font-semibold text-xs lg:text-sm">
-                Audio / ऑडिओ
-              </label>
-              <input
-                type="file"
-                id="audio"
-                name="audio"
-                onChange={handleFileChange}
-                className="border-2 border-gray-200 rounded-md px-2 py-1 w-32 md:w-full text-xs md:text-sm" // Adjust the width and text size for mobile and larger screens
-              />
-            </div> */}
 
             <button
               type="submit"
@@ -520,15 +593,7 @@ const TaskForm = () => {
               Create Task
             </button>
           </form>
-          {errors.length > 0 && (
-            <div className="mt-4">
-              <ul className="text-red-500">
-                {errors.map((error, index) => (
-                  <li key={index}>{error.msg}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+
         </div>
       </div>
     </>

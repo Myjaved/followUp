@@ -1,15 +1,23 @@
-'use client'
 
 'use client'
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import EmployeeSidebar from '../components/EmployeeSidebar';
+import { faEye, faSpinner ,faFileExcel} from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import NavSideEmp from '../components/NavSideEmp';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 
 const formatDate = (dateString) => {
@@ -41,6 +49,24 @@ const OverdueByEmployee = () => {
   const [viewTask, setViewTask] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(15); // Set the number of tasks per page
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * tasksPerPage + 1;
+  };
+
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1); // Reset to the first page when searching
+  };
+
+  const filteredTasks = overdueTasks.filter((task) =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   const handlePicturePreview = (imageUrl) => {
     const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
@@ -93,6 +119,43 @@ const OverdueByEmployee = () => {
     setViewTask(null); // Clear the task to close the modal
   };
 
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+      
+
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredTasks.map(task => {
+      return {
+        'Title': task.title,
+        'Status': task.status,
+        'StartDate': task.startDate,
+        'DeadLine': task.deadlineDate,
+        'AssignTo': task.assignTo, // Assign the name if available, otherwise use the ID
+      };
+    });
+
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'OverdueTask_list' + fileExtension;
+    saveAs(data, fileName);
+  };
+
   return (
     <>
       {/* <Navbar />
@@ -100,6 +163,25 @@ const OverdueByEmployee = () => {
       <NavSideEmp />
       <div className=" m-5 pl-5 md:pl-72 mt-20">
         <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-800">Overdue Tasks</h1>
+
+        <div className="flex justify-center items-center mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search ..."
+            className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/3"
+          />
+        </div>
+        <div className="relative mb-7 md:mb-10">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
+
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
@@ -123,14 +205,14 @@ const OverdueByEmployee = () => {
               </thead>
               <tbody>
                 {overdueTasks.length > 0 ? (
-                  overdueTasks.map((task, index) => (
+                  currentTasks.map((task, index) => (
                     <tr key={task._id}>
-                      <td className="px-4 py-2 border text-center border-red-300">{index + 1}</td>
-                      <td className="px-4 py-2 border text-center border-red-300">{task.title}</td>
+                      <td className="px-4 py-2 border text-center border-red-300">{calculateSerialNumber(index)}</td>
+                      <td className="px-4 py-2 border text-left border-red-300">{task.title}</td>
                       <td className="px-4 py-2 border text-center font-semibold text-red-950 border-red-300">Overdue</td>
                       <td className="px-4 py-2 border text-center border-red-300">{formatDate(task.startDate)}</td>
                       <td className="px-4 py-2 border text-center border-red-300">{formatDate(task.deadlineDate)}</td>
-                      <td className="border px-12 py-2 text-center border-red-300 ">
+                      <td className="border px-4 py-2 text-center border-red-300 ">
                         <FontAwesomeIcon
                           icon={faEye}
                           className="text-blue-500 hover:underline cursor-pointer text-xl"
@@ -141,8 +223,8 @@ const OverdueByEmployee = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="px-4 py-2 border">
-                      No overdue tasks found.
+                    <td colSpan="8" className="px-4 py-2 border text-center font-semibold">
+                      No Overdue Tasks found
                     </td>
                   </tr>
                 )}
@@ -150,6 +232,21 @@ const OverdueByEmployee = () => {
             </table>
           </div>
         )}
+        <ul className="flex justify-center items-center mt-4">
+          {Array.from({ length: Math.ceil(filteredTasks.length / tasksPerPage) }, (_, index) => (
+            <li key={index} className="px-3 py-2">
+              <button
+                onClick={() => paginate(index + 1)}
+                className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                  } px-4 py-2 rounded`}
+              >
+                {index + 1}
+              </button>
+            </li>
+          )
+          )}
+        </ul>
+
       </div>
 
       {/* View Task Modal */}

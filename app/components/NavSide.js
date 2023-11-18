@@ -1,6 +1,6 @@
 'use client'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDown, faPaperPlane, faTasks, faSquareCheck, faHourglassStart, faExclamationCircle, faPenToSquare, faTableCellsLarge, faUser, faLinesLeaning, faClipboardList, faUserPlus, faBarsStaggered, faSquarePlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faPaperPlane, faTasks, faSquareCheck, faHourglassStart, faExclamationCircle, faPenToSquare, faTableCellsLarge, faUser, faLinesLeaning, faClipboardList, faUserPlus, faBarsStaggered, faSquarePlus, faUpload } from '@fortawesome/free-solid-svg-icons';
 import React, { useState, useEffect, useCallback } from 'react';
 import { faSignOutAlt, faBell, faEnvelope, faKey } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -92,7 +92,7 @@ const NavSide = () => {
         setLeadModalOpen(false);
     };
 
-
+    // Notification function
     const handleLeadNotificationClick = async (notification) => {
         try {
             if (!notification.clicked) {
@@ -132,8 +132,8 @@ const NavSide = () => {
         }
     };
 
+    // Change Password Function
     const handleChangePassword = async () => {
-        // Function to change the password
         try {
             const response = await axios.post('http://localhost:5000/api/auth/changePassword', {
                 email: changePasswordData.email,
@@ -165,13 +165,8 @@ const NavSide = () => {
         setShowNotifications(false);
         openModal();
 
-        // Update the task's status as clicked and decrement the notification count
-        const updatedNewTasks = newTasks.map((newTask) => {
-            if (newTask._id === task._id) {
-                return { ...newTask, clicked: true };
-            }
-            return newTask;
-        });
+        // Remove the task from the list by filtering it out
+        const updatedNewTasks = newTasks.filter((newTask) => newTask._id !== task._id);
         setNewTasks(updatedNewTasks);
         localStorage.setItem('newTasks', JSON.stringify(updatedNewTasks));
 
@@ -190,6 +185,7 @@ const NavSide = () => {
         }
     };
 
+    // Logout Function
     const logout = () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('username');
@@ -214,13 +210,14 @@ const NavSide = () => {
         }
     };
 
+    // Get Notification Function
     const fetchNotifications = useCallback(async () => {
         try {
+            // const empUsername = localStorage.getItem('empUsername');
+            // if (!empUsername && typeof window !== 'undefined') 
+            {
 
-            const empUsername = localStorage.getItem('empUsername');
-            if (!empUsername && typeof window !== 'undefined') {
-
-                const response = await axios.get('http://localhost:5000/api/notification/notifications', {
+                const response = await axios.get('http://localhost:5000/api/notification/notification', {
                     headers: {
                         Authorization: localStorage.getItem('authToken'),
                     },
@@ -239,7 +236,6 @@ const NavSide = () => {
                     );
 
                     setNewTasks(updatedNotifications);
-
                     // Calculate the initial notification count
                     const initialNotificationCount = updatedNotifications.filter((task) => !task.clicked).length;
                     setNotificationCount(initialNotificationCount);
@@ -250,6 +246,7 @@ const NavSide = () => {
         }
     }, [fetchAssignedByName]);
 
+    // Get Lead Notification Function
     const fetchEnvelopeNotifications = useCallback(async () => {
         try {
             const response = await axios.get('http://localhost:5000/api/lead/notifications');
@@ -274,14 +271,14 @@ const NavSide = () => {
     }, []);
 
 
+    // useEffect(() => {
+    //     if (typeof window !== 'undefined') {
+    //         const subUsername = localStorage.getItem('subUsername');
+    //         const newRole = subUsername ? 'Employee' : 'Admin';
+    //         setRole(newRole);
+    //     }
+    // }, []);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const subUsername = localStorage.getItem('subUsername');
-            const newRole = subUsername ? 'Employee' : 'Admin';
-            setRole(newRole);
-        }
-    }, []);
 
     useEffect(() => {
         const closeDropdown = (event) => {
@@ -319,6 +316,7 @@ const NavSide = () => {
         }
     }, []);
 
+    // Handle Picture-Upload Function
     const handleProfilePictureUpload = async (file) => {
         try {
             const formData = new FormData();
@@ -356,11 +354,11 @@ const NavSide = () => {
         setShowNotifications(!showNotifications);
     };
 
+
     function formatDateTime(dateTimeString) {
         const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
         const date = new Date(dateTimeString);
         const formattedDate = date.toLocaleDateString('en-GB', options);
-
         const timeOptions = { hour: '2-digit', minute: '2-digit' };
         const formattedTime = date.toLocaleTimeString(undefined, timeOptions);
         return `${formattedDate} ${formattedTime}`;
@@ -368,32 +366,30 @@ const NavSide = () => {
 
     return (
         <>
-            <nav className="fixed top-0 right-0 z-50 w-full bg-gray-300 text-black border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <nav className="fixed top-0 right-0 z-50 w-full bg-blue-400 text-black border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
 
                     <div className="flex items-center justify-between">
 
                         <div className="flex items-center justify-start">
-
                             <button onClick={toggleSidebar} data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                                 <span className="sr-only">Open sidebar</span>
                                 <svg className="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path clipRule="evenodd" fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
                                 </svg>
                             </button>
-
                             <Link href="#" className="flex ml-2 md:mr-24">
-                                {/* <img src="https://flowbite.com/docs/images/logo.svg" className="h-8 mr-3" alt="FlowBite Logo" /> */}
-                                <span className="self-center text-base md:text-2xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-red-800">Admin</span>
+                                <span className="self-center text-base md:text-2xl font-semibold whitespace-nowrap dark:text-white md:pl-10 text-white">Admin</span>
                             </Link>
                         </div>
+
 
                         <div className="flex items-center">
                             <button
                                 onClick={toggleLeadDropdown}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none mr-5"
                             >
-                                <FontAwesomeIcon icon={faEnvelope} className="text-xl fa-lg justify-between text-blue-500" />
+                                <FontAwesomeIcon icon={faEnvelope} className="text-xl fa-lg justify-between text-white" />
                                 {envelopeNotificationCount > 0 && (
                                     <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs text-center absolute m-4 mt-0 -mr-2">
                                         {envelopeNotificationCount}
@@ -402,7 +398,7 @@ const NavSide = () => {
                             </button>
 
                             {isLeadDropdownOpen && (
-                                <div className="origin-bottom-right absolute right-20 mt-40 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ">
+                                 <div className={`origin-bottom-right absolute right-3 md:right-24 ${envelopeNotifications.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-72 top-6 ${envelopeNotifications.length > 0 ? 'h-28' : 'h-12'} overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -420,7 +416,6 @@ const NavSide = () => {
                                                     <div className="mb-2"><strong>{notification.message}</strong></div>
                                                     <div className="mb-2"><strong>Title:</strong> {notification.description}</div>
                                                     <div className="mb-2"><strong>Created By:</strong> {notification.assignedByName}</div>
-                                                    {/* Render lead notification content here */}
                                                 </div>
                                             ))
                                         ) : (
@@ -435,15 +430,18 @@ const NavSide = () => {
                                 onClick={handleNotificationClick}
                                 className="dropdown-toggle text-white flex items-center focus:outline-none"
                             >
-                                <FontAwesomeIcon icon={faBell} className="text-xl fa-lg justify-between mr-1 text-yellow-600" />
+                                <FontAwesomeIcon icon={faBell} className="text-xl fa-lg justify-between mr-1 text-white" />
                                 {notificationCount > 0 && (
-                                    <span className="bg-red-500 text-white rounded-full w-4 h-4 text-xs shadow-lg text-center absolute top-0 right-0 -mt-1 -mr-1">
+                                    <span className="relative bg-red-500 text-white rounded-full w-4 h-4 text-xs shadow-lg text-center top-0 right-3.5 -mt-3">
+
                                         {notificationCount}
                                     </span>
                                 )}
                             </button>
+                            
                             {showNotifications && (
-                                <div className="origin-bottom-right absolute right-1 mt-20 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                <div className={`origin-bottom-right absolute right-3 md:right-24 ${newTasks.length > 0 ? 'mt-9' : 'mt-20'} mt-14 md:mt-9 w-48 md:w-72 top-6 ${newTasks.length > 0 ? 'h-32' : 'h-12'} overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}>
+                               
                                     <div
                                         className="py-1"
                                         role="menu"
@@ -454,15 +452,15 @@ const NavSide = () => {
                                             newTasks.map((task, index) => (
                                                 <div
                                                     key={index}
-                                                    className={`px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 cursor-pointer ${task.clicked ? 'bg-red-500' : ''}`}
+                                                    className={`px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 cursor-pointer ${task.clicked ? 'bg-red-200' : ''}`}
                                                     role="menuitem"
                                                     onClick={() => handleTaskClick(task)}
                                                 >
                                                     <div className='mx-2'>
-                                                        <div className='my-2'><strong>{task.assignedByName}</strong> <span className='mx-7'>{formatDateTime(task.createdAt)}</span></div>
+                                                        <div className='my-2'><strong>{task.assignedByName}</strong> <span className='mx-1'>{formatDateTime(task.createdAt)}</span></div>
                                                         <div className='my-1'><strong>{task.message}</strong></div>
                                                         <div className='my-1'><strong>Title :</strong> {task.title}</div>
-                                                        <div className='mb-3'><strong>Task ID :</strong> {task._id.slice(17, 23)}</div>
+                                                        {/* <div className='mb-3'><strong>Task ID :</strong> {task._id.slice(17, 23)}</div> */}
                                                         <hr />
                                                     </div>
                                                 </div>
@@ -560,7 +558,7 @@ const NavSide = () => {
                                 <input
                                     type="file"
                                     id="profilePictureUpload"
-                                    accept="image/*"
+                                    accept=".jpg, .jpeg, .png" // Allow only .jpg, .jpeg, and .png files
                                     style={{ display: 'none' }}
                                     onChange={handleProfilePictureChange}
                                 />
@@ -615,12 +613,12 @@ const NavSide = () => {
                                 <p className="mb-2 text-left justify-center">
                                     <strong>Assigned By:</strong> {selectedTask.assignedByName}
                                 </p>
-                                <p className="mb-2 text-left justify-center">
+                                {/* <p className="mb-2 text-left justify-center">
                                     <strong>Picture : </strong><Link href='/receivedTask'> Go to All Tasks to show</Link>
                                 </p>
                                 <p className="mb-2 text-left justify-center">
                                     <strong>Audio : </strong><i> Open All Task List to Listen</i>
-                                </p>
+                                </p> */}
                             </div>
                             <button
                                 type="button"
@@ -762,7 +760,7 @@ const NavSide = () => {
 
 
             <aside id="logo-sidebar"
-             className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
+                className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700`} aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>
@@ -815,7 +813,7 @@ const NavSide = () => {
                                         <Link href="/overdue"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
                                             <FontAwesomeIcon icon={faExclamationCircle} size='xl'
-                                                style={{ color: "#FF5733", marginLeft: '15px' }} />
+                                                style={{ color: "#FF5733", marginLeft: '13px' }} />
                                             <span className="ml-3 pl-1">Overdue Tasks</span>
 
 
@@ -824,9 +822,9 @@ const NavSide = () => {
                                     <li>
                                         <Link href="/sendTask"
                                             className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 group">
-                                            <FontAwesomeIcon icon={faPaperPlane} size='xl'
-                                                style={{ color: "red", marginLeft: '15px' }} />
-                                            <span className="ml-3 pl-1">Tasks Send</span>
+                                            <FontAwesomeIcon icon={faUpload} size='xl'
+                                                style={{ color: "rgb(255, 215, 0)", marginLeft: '15px' }} />
+                                            <span className="ml-3 pl-1">Send Tasks</span>
                                         </Link>
                                     </li>
                                     <li>
@@ -864,7 +862,7 @@ const NavSide = () => {
                                     <li>
                                         <Link href="/subemp" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-200 dark:hover-bg-gray-700 group pl-2">
                                             <FontAwesomeIcon icon={faUserPlus} size='xl'
-                                                style={{ color: "#493927", marginLeft: '15px' }} />
+                                                style={{ color: "indigo", marginLeft: '17px' }} />
                                             <span className="ml-3">Add Employee</span>
                                         </Link>
                                     </li>

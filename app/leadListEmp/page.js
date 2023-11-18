@@ -3,9 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrash, faEye, faSpinner, faShareNodes, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faTrash, faEye,faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import NavSideEmp from '../components/NavSideEmp';
 import Image from 'next/image';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+    const a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    const url = window.URL.createObjectURL(data);
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+};
 
 
 const LeadListEmp = () => {
@@ -18,9 +30,26 @@ const LeadListEmp = () => {
   const [leadToDelete, setLeadToDelete] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
-
-
   const [editedLead, setEditedLead] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [leadsPerPage] = useState(15); // Set the number of leads per page
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * leadsPerPage + 1;
+  };
+
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1); // Reset to the first page when searching
+  };
+
+  const filteredLeads = leads.filter((lead) =>
+    lead.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+
 
   const handleEditSave = async () => {
     try {
@@ -111,35 +140,97 @@ const LeadListEmp = () => {
     setPreviewImageUrl(completeImageUrl);
     setIsPreviewModalOpen(true);
   };
+
+  const indexOfLastLead = currentPage * leadsPerPage;
+  const indexOfFirstLead = indexOfLastLead - leadsPerPage;
+  const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredLeads.map(lead => {
+      console.log(filteredLeads)
+        return {
+            'CustomerName': lead.customerName,
+            'ContactNo': lead.contactNo,
+            'Email': lead.email,
+            
+        };
+    });
+
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'Send Tasks_list' + fileExtension;
+    saveAs(data, fileName);
+};
+
   return (
     <>
       <NavSideEmp />
       <div className="m-5 pl-5 md:pl-72 mt-20">
         <h2 className="text-xl md:text-2xl font-bold mb-4 text-indigo-500">Lead List</h2>
+
+        <div className="flex justify-center items-center mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search ..."
+            className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/3"
+          />
+        </div>
+        <div className="relative mb-7 md:mb-12">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredLeads)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
+
+
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded-lg shadow-md">
             <thead className='bg-violet-300'>
               <tr>
-                <th className="p-3 text-center">Sr.No</th>
-                <th className="p-3 text-left">Customer Name</th>
+                <th className="px-4 py-2 border-b">Sr.No</th>
+                <th className="px-4 py-2 border-b">Customer Name</th>
                 {/* <th className="border border-gray-200 p-3">Company Name</th> */}
                 {/* <th className=" p-3">Description</th> */}
-                <th className="p-3 text-left">Contact No</th>
-                <th className="p-3 text-center">Email</th>
-                <th className="p-3 text-center">Actions</th>
+                <th className="px-4 py-2 border-b">Contact No</th>
+                <th className="px-4 py-2 border-b">Email</th>
+                <th className="px-4 py-2 border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead, index) => (
+              {leads.length >0 ? (
+              currentLeads.map((lead, index) => (
                 <tr key={lead._id}>
-                  <td className="border border-violet-300 p-3 text-center">{index + 1}</td>
-                  <td className="border border-violet-300 p-3">{lead.customerName}</td>
+                  <td className="px-4 py-2 border text-center border-violet-300">{calculateSerialNumber(index)}</td>
+                  <td className="px-4 py-2 border text-center border-violet-300">{lead.customerName}</td>
                   {/* <td className="border border-gray-200 p-3">{lead.companyName}</td> */}
                   {/* <td className="border border-violet-300 p-3">{lead.description}</td> */}
-                  <td className="border border-violet-300 p-3">{lead.contactNo}</td>
-                  <td className="border border-violet-300 p-3">{lead.email}</td>
-                  <td className="border border-violet-300">
+                  <td className="px-4 py-2 border text-center border-violet-300">{lead.contactNo}</td>
+                  <td className="px-3 py-2 border text-center border-violet-300">{lead.email}</td>
+                  <td className="px-4 py-2 border text-center border-violet-300">
                     <div style={{ display: 'flex' }}>
+                      <FontAwesomeIcon
+                        icon={faEye}
+                        className="text-blue-500 hover:underline cursor-pointer md:pl-2 pl-2 "
+                        onClick={() => handleViewClick(lead)}
+                      />
                       <FontAwesomeIcon
                         icon={faPenToSquare}
                         className="text-orange-500 hover:underline cursor-pointer md:pl-5 pl-2"
@@ -147,22 +238,40 @@ const LeadListEmp = () => {
                       />
                       <FontAwesomeIcon
                         icon={faTrash}
-                        className="text-red-500 hover:underline cursor-pointer md:pl-5 pl-2"
+                        className="text-red-500 hover:underline cursor-pointer md:-mr-16 pl-5"
                         onClick={() => handleDeleteLead(lead._id)}
                       />
-                      <FontAwesomeIcon
-                        icon={faEye}
-                        className="text-blue-500 hover:underline cursor-pointer md:pl-5 md:-mr-16 pl-2  "
-                        onClick={() => handleViewClick(lead)}
-                      />
+
                     </div>
 
                   </td>
                 </tr>
-              ))}
+              ))
+              ):(
+                <tr>
+                  <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                  No any Lead Added
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+        <ul className="flex justify-center items-center mt-4">
+          {Array.from({ length: Math.ceil(filteredLeads.length / leadsPerPage) }, (_, index) => (
+            <li key={index} className="px-3 py-2">
+              <button
+                onClick={() => paginate(index + 1)}
+                className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                  } px-4 py-2 rounded`}
+              >
+                {index + 1}
+              </button>
+            </li>
+          )
+          )}
+        </ul>
+
 
         {isViewModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>

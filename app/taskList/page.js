@@ -4,7 +4,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleExclamation, faPenToSquare, faTrash, faEye, faSpinner, faShareNodes, faPlus ,faFileExcel} from '@fortawesome/free-solid-svg-icons';
+import { faCircleExclamation, faPenToSquare, faTrash, faEye, faSpinner, faShareNodes, faPlus, faFileExcel } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'; // Assuming 'faWhatsapp' belongs to the brand icons
 import { format, parse, isBefore } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -73,10 +74,9 @@ const ShareButton = ({ task }) => {
   return (
     <button
       onClick={handleShareClick}
-      className="text-green-800 hover:underline cursor-pointer -mr-2"
+      className="text-green-600 hover:underline cursor-pointer -mr-3"
     >
-      <FontAwesomeIcon icon={faShareNodes} />
-    </button>
+      <FontAwesomeIcon icon={faWhatsapp} />    </button>
   );
 };
 const itemsPerPage = 15; // Number of items to display per page
@@ -115,7 +115,7 @@ const PendingTasks = () => {
   const calculateSerialNumber = (index) => {
     return index + (currentPage - 1) * itemsPerPage + 1;
   };
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTasks, setFilteredTasks] = useState([]);
   const router = useRouter()
@@ -223,26 +223,68 @@ const PendingTasks = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const [error, setError] = useState(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+
+  const handleErrorModalClose = () => {
+    if (error && error.includes('not authorized')) {
+      setIsErrorModalOpen(false);
+      setError(null);
+    } else {
+      setIsDeleteModalOpen(false);
+      setIsErrorModalOpen(false);
+      setError(null);
+    }
+  };
+
+
+
+  // const handleDelete = async () => {
+  //   try {
+  //     const token = localStorage.getItem('authToken');
+  //     const response = await axios.delete(`http://localhost:5000/api/task/delete/${deleteTaskId}`, {
+  //       headers: {
+  //         Authorization: token,
+  //       },
+  //     });
+
+  //     if (response.status === 200) {
+  //       console.log('Task deleted successfully');
+  //       setIsDeleteModalOpen(false);
+  //       setTasks((prevTasks) => prevTasks.filter((task) => task._id !== deleteTaskId));
+  //     } else {
+  //       console.error('Failed to delete task');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //   }
+  // };
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.delete(`http://localhost:5000/api/task/delete/${deleteTaskId}`, {
+      const deleteResponse = await axios.delete(`http://localhost:5000/api/task/delete/${deleteTaskId}`, {
         headers: {
           Authorization: token,
         },
       });
 
-      if (response.status === 200) {
+      if (deleteResponse.status === 200) {
         console.log('Task deleted successfully');
         setIsDeleteModalOpen(false);
         setTasks((prevTasks) => prevTasks.filter((task) => task._id !== deleteTaskId));
       } else {
-        console.error('Failed to delete task');
+        setError('Failed to delete task');
+        setIsErrorModalOpen(true);
+        setIsDeleteModalOpen(false);
       }
     } catch (error) {
       console.error('Error:', error);
+      setError('Not Authority To Delete This Task !!!');
+      setIsErrorModalOpen(true);
+      setIsDeleteModalOpen(false);
     }
   };
+
 
   const handleEdit = (taskId) => {
     router.push(`/editForm/${taskId}`);
@@ -359,7 +401,7 @@ const PendingTasks = () => {
 
         <div className="relative mb-16 md:mb-16 md:-mt-10">
           <button
-            className="bg-green-500 text-white font-bold py-1 px-5 md:px-4 rounded-lg absolute top-2 right-3 md:right-0"
+            className="bg-green-500 text-white font-bold py-1 px-5 md:px-4 rounded-lg absolute top-2 right-3 md:right-0 md:-mt-4"
             onClick={() => router.push('/taskForm')}
           >
             <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
@@ -369,7 +411,7 @@ const PendingTasks = () => {
 
         <div className="relative mb-7 md:mb-14">
           <button
-            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-16 top-2 right-32 text-sm md:text-sm flex items-center mr-1" // Positioning
             onClick={() => exportToExcel(filteredTasks)}                    >
             <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
             <span className="font-bold">Export</span>
@@ -393,52 +435,60 @@ const PendingTasks = () => {
               <thead className='bg-orange-500 text-white'>
                 <tr>
                   <th className="px-4 py-2 text-center">Sr.No.</th>
-                  <th className="px-4 py-2 text-center">Title</th>
+                  <th className="px-4 py-2 text-center">Task Title</th>
                   <th className="px-4 py-2 text-center">Status</th>
                   <th className="px-4 py-2 text-center">StartDate</th>
-                  <th className="px-4 py-2 text-center">Deadline</th>
+                  <th className="px-4 py-2 text-center">DeadLine</th>
                   <th className="px-4 py-2 text-center">AssignTo</th>
                   <th className="px-4 py-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {getTasksForCurrentPage().map((task, index) => (
-                  <tr key={task._id} className="hover:bg-gray-100">
-                    <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
-                    <td className="border px-4 py-2 font-semibold">{task.title}</td>
-                    <td className="text-center border px-2 py-1">
-                      <span className={`rounded-full font-semibold px-5 py-1 ${task.status === 'completed' ? 'text-green-800 bg-green-200' :
-                        task.status === 'overdue' ? 'text-red-800 bg-red-200' :
-                          task.status === 'pending' ? 'text-blue-800 bg-blue-200' :
-                            ''
-                        }`}>
-                        {task.status}
-                      </span>
-                    </td>
-                    <td className="border px-4 py-2">{task.startDate}</td>
-                    <td className="border px-4 py-2">{formatDate(task.deadlineDate)}</td>
-                    <td className="border px-4 py-2">{task.assigneeName}</td>
-                    <td className="border px-4 py-2">
-                      <FontAwesomeIcon
-                        icon={faEye}
-                        className="text-blue-500 hover:underline mr-3 cursor-pointer"
-                        onClick={() => handleViewClick(task._id)}
-                      />
-                      <FontAwesomeIcon
-                        icon={faPenToSquare}
-                        className="text-orange-500 hover:underline mr-3 cursor-pointer"
-                        onClick={() => handleEdit(task._id)}
-                      />
-                      <FontAwesomeIcon
-                        icon={faTrash}
-                        className="text-red-500 hover:underline mr-3 cursor-pointer"
-                        onClick={() => handleDeleteClick(task._id)}
-                      />
+                {tasks.length > 0 ? (
+                  getTasksForCurrentPage().map((task, index) => (
+                    <tr key={task._id} className="hover:bg-gray-100">
+                      <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
+                      <td className="border px-4 py-2 font-semibold">{task.title}</td>
+                      <td className="text-center border px-2 py-1">
+                        <span className={`rounded-full font-semibold px-5 py-1 ${task.status === 'completed' ? 'text-green-800 bg-green-200' :
+                          task.status === 'overdue' ? 'text-red-800 bg-red-200' :
+                            task.status === 'pending' ? 'text-blue-800 bg-blue-200' :
+                              ''
+                          }`}>
+                          {task.status}
+                        </span>
+                      </td>
+                      <td className="border px-4 py-2 text-center">{task.startDate}</td>
+                      <td className="border px-4 py-2 text-center">{formatDate(task.deadlineDate)}</td>
+                      <td className="border px-4 py-2 text-center font-semibold">{task.assigneeName}</td>
+                      <td className="border px-4 py-2">
+                        <FontAwesomeIcon
+                          icon={faEye}
+                          className="text-blue-500 hover:underline mr-3 cursor-pointer pl-2"
+                          onClick={() => handleViewClick(task._id)}
+                        />
+                        <FontAwesomeIcon
+                          icon={faPenToSquare}
+                          className="text-orange-500 hover:underline mr-3 cursor-pointer"
+                          onClick={() => handleEdit(task._id)}
+                        />
+                        <FontAwesomeIcon
+                          icon={faTrash}
+                          className="text-red-500 hover:underline mr-3 cursor-pointer"
+                          onClick={() => handleDeleteClick(task._id)}
+                        />
 
-                      <ShareButton task={task} />
+                        <ShareButton task={task} />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                      No Tasks Found
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
             <div className="flex justify-center mt-4">
@@ -464,6 +514,9 @@ const PendingTasks = () => {
                 <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-400 text-center">Task Details</h3>
                 {viewTask && (
                   <div>
+                    <p className="mb-2 text-left justify-center ">
+                      <strong>AssignedBy:</strong> {viewTask.assignedBy.name}
+                    </p>
                     <p className="mb-2 text-left justify-center ">
                       <strong>AssignTo:</strong> {viewTask.assigneeName}
                     </p>
@@ -522,6 +575,25 @@ const PendingTasks = () => {
                   onClick={() => setIsViewModalOpen(false)}
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isErrorModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            <div className="modal-container bg-white sm:w-96 sm:p-6 rounded shadow-lg" >
+              <button type="button" className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" onClick={handleErrorModalClose}></button>
+              <div className="p-2 text-center">
+                <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Error</h3>
+                <p className="mb-3 text-center justify-center mt-3">{error}</p>
+                <button
+                  type="button"
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mr-2 text-xs md:text-base"
+                  onClick={handleErrorModalClose}
+                >
+                  Close
                 </button>
               </div>
             </div>

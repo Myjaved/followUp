@@ -3,9 +3,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faEye ,faFileExcel} from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import NavSideEmp from '../components/NavSideEmp';
+import * as XLSX from 'xlsx';
+
+const saveAs = (data, fileName) => {
+  const a = document.createElement('a');
+  document.body.appendChild(a);
+  a.style = 'display: none';
+  const url = window.URL.createObjectURL(data);
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 
 const formatDateString = (dateString) => {
@@ -24,8 +36,24 @@ const ReceivedTaskList = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [completeImageUrl, setPreviewImageUrl] = useState('');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(15); // Number of tasks per page
+  const [searchTerm, setSearchTerm] = useState('');
 
   let serialNumber = 1; // Initialize the serial number
+
+  const calculateSerialNumber = (index) => {
+    return index + (currentPage - 1) * tasksPerPage + 1;
+  };
+
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1); // Reset to the first page when searching
+  };
+
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handlePicturePreview = (imageUrl) => {
     const completeImageUrl = `http://localhost:5000/${imageUrl}`; // Generate the complete image URL
@@ -136,11 +164,65 @@ const ReceivedTaskList = () => {
     loadFormattedTasks();
   }, []);
 
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const exportToExcel = async () => {
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    const fileExtension = '.xlsx';
+
+   
+    // Filter and map the data including the header fields and employee names
+    const tasksToExport = filteredTasks.map(task => {
+      return {
+        'Title': task.title,
+        'Status': task.status,
+        'StartDate': task.startDate,
+        'DeadLine': task.deadlineDate,
+        'AssignTo': task.assignTo, // Assign the name if available, otherwise use the ID
+      };
+    });
+
+    // Create a worksheet from the filtered task data
+    const ws = XLSX.utils.json_to_sheet(tasksToExport);
+    const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+
+    // Convert the workbook to an array buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob from the array buffer
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    // Set the filename and save the file using saveAs function
+    const fileName = 'Pending Task_list' + fileExtension;
+    saveAs(data, fileName);
+  };
   return (
     <>
       <NavSideEmp />
       <div className="m-5 pl-5 md:pl-72 mt-20">
         <h2 className="text-xl md:text-2xl font-semibold mb-4 m-3 text-orange-500">Pending Task List</h2>
+
+        <div className="flex justify-center items-center mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search ..."
+            className="px-3 py-1 border border-gray-400 rounded-full w-full md:w-1/3"
+          />
+        </div>
+        <div className="relative mb-7 md:mb-10">
+          <button
+            className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-0 right-0 text-sm md:text-sm flex items-center mr-1" // Positioning
+            onClick={() => exportToExcel(filteredTasks)}                    >
+            <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
+            <span className="font-bold">Export</span>
+          </button>
+        </div>
+
         {loading ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-50 bg-gray-700">
             <FontAwesomeIcon
@@ -154,63 +236,68 @@ const ReceivedTaskList = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className='bg-orange-500 text-white'>
                 <tr>
-                  <th className="px-4 py-2 text-center text-xs font-bold uppercase tracking-wider">
-                    Sr. No.
-                  </th>
-                  <th className="px-4 py-2 pl-10 text-left text-xs font-bold  uppercase tracking-wider">
-                    Title
-                  </th>
-                  {/* <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th> */}
-                  <th className="px-4 py-2 pl-10 text-left text-xs font-bold  uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-bold  uppercase tracking-wider">
-                    Deadline Date
-                  </th>
-                  <th className="px-4 py-2 pl-5 text-left text-xs font-bold  uppercase tracking-wider">
-                    AssignedBy
-                  </th>
-                  <th className="px-20 py-2 text-left text-xs font-bold  uppercase tracking-wider">
-                    Actions
-                  </th>
+                <th className="px-4 py-2 ">Sr.No.</th>
+                  <th className="px-4 py-2 ">Title</th>
+                  <th className="px-4 py-2 ">Status</th>
+                  <th className="px-4 py-2 ">Date</th>
+                  <th className="px-4 py-2 ">DeadLine</th>
+                  <th className="px-4 py-2 ">AssignedBy</th>
+                  <th className="px-4 py-2 ">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200 border border-gray-200">
-                {tasks.map((task) => (
+                {tasks.length >0 ? (
+                currentTasks.map((task,index) => (
                   <tr key={task._id}>
-                    <td className="px-6 py-1 whitespace-nowrap text-center border border-orange-400">{serialNumber++}</td>
-                    <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.title}</td>
+                    <td className="px-2 py-1 whitespace-nowrap text-center border border-orange-400">{calculateSerialNumber(index)}</td>
+                    <td className="px-2 py-1 whitespace-nowrap border border-orange-400">{task.title}</td>
+                    <td className="px-6 py-1 whitespace-nowrap border border-orange-400">Pending</td>
                     <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.startDate}</td>
                     <td className="px-6 py-1 whitespace-nowrap border border-orange-400">{task.deadlineDate}</td>
                     <td className="px-6 py-1 whitespace-nowrap border border-orange-400 text-center">{task.assignedBy?.name ? task.assignedBy?.name : <strong>SELF</strong>}</td>
                     <td className="px-5 py-1 whitespace-nowrap border border-orange-400">
 
-                      {/* <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-sm"
-                    onClick={() => handleViewClick(task._id)}
-                  >
-                    View
-                  </button> */}
                       <FontAwesomeIcon
                         icon={faEye}
-                        className="text-blue-500 hover:underline mr-5 cursor-pointer pl-5 text-lg"
+                        className="text-blue-500 hover:underline mr-1 cursor-pointer pl-3 text-lg"
                         onClick={() => handleViewClick(task._id)}
                       />
                       <button
-                        className="bg-green-400 hover:bg-green-700 text-black font-bold py-2 px-4 rounded-xl mx-3 text-sm"
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-xl mx-3 my-1.5 text-sm"
                         onClick={() => handleMarkAsCompleteClick(task._id)}
                       >
                         Mark as Complete
                       </button>
                     </td>
                   </tr>
-                ))}
+                ))
+                ):(
+                  <tr>
+                    <td colSpan="8" className='px-4 py-2 text-center border font-semibold'>
+                      No Pending Tasks Found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         )}
+        <ul className="flex justify-center items-center mt-4">
+          {Array.from({ length: Math.ceil(filteredTasks.length / tasksPerPage) }, (_, index) => (
+            <li key={index} className="px-3 py-2">
+              <button
+                onClick={() => paginate(index + 1)}
+                className={`${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                  } px-4 py-2 rounded`}
+              >
+                {index + 1}
+              </button>
+            </li>
+          )
+          )}
+        </ul>
+
+
         {/* View Task Modal */}
         {isViewModalOpen && (
           <div

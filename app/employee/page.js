@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import NavSideSuper from '../components/NavSideSuper';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash, faEnvelope } from "@fortawesome/free-solid-svg-icons";
-
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'; // Assuming 'faWhatsapp' belongs to the brand icons
 
 const initialFormData = {
     name: '',
@@ -21,8 +21,6 @@ const EmployeeRegistration = () => {
     const [formData, setFormData] = useState(initialFormData);
     const [successMessage, setSuccessMessage] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-
-
     const [adminCompanies, setAdminCompanies] = useState([]);
     const [error, setError] = useState(null);
     const router = useRouter();
@@ -51,28 +49,6 @@ const EmployeeRegistration = () => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
-
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-
-    //     try {
-    //         const response = await axios.post('http://localhost:5000/api/employee/register', formData);
-
-    //         if (response.status === 201) {
-    //             // Registration successful, redirect to login page or any other page
-    //             setFormData(initialFormData)
-    //             setSuccessMessage('Admin added successfully.');
-    //             router.push('/empList')
-    //         }
-    //     } catch (err) {
-    //         // Handle registration error
-    //         if (err.response) {
-    //             setError(err.response.data.error);
-    //         } else {
-    //             setError('An error occurred while registering the employee.');
-    //         }
-    //     }
-    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -112,7 +88,7 @@ const EmployeeRegistration = () => {
             <NavSideSuper />
             <div className='p-2 md:p-1 bg-slate-50 '>
                 <div className="mx-auto max-w-md p-6 bg-white rounded-lg shadow-md mt-16 md:mt-28 border border-gray-300">
-                    <h2 className="text-sm md:text-2xl font-semibold text-center text-orange-500 -mt-3">Admin Registration</h2>
+                    <h2 className="text-sm md:text-2xl font-bold text-center text-orange-500 -mt-3">Admin Registration</h2>
                     <form onSubmit={handleSubmit} className="mt-2 space-y-4">
                         <div>
                             <label className="block text-xs md:text-sm font-medium">Name <span className="text-red-500 text-md">*</span></label>
@@ -131,7 +107,7 @@ const EmployeeRegistration = () => {
                             <input
                                 type="text"
                                 name="phoneNumber"
-                                placeholder='+91 23 456 7890'
+                                placeholder='Enter Phone Number'
                                 value={formData.phoneNumber}
                                 onChange={handleChange}
                                 className="w-full px-4 py-1 md:py-2 border rounded-md focus:ring focus:ring-indigo-400 text-xs md:text-sm"
@@ -139,15 +115,25 @@ const EmployeeRegistration = () => {
                         </div>
                         <div>
                             <label className="block text-xs md:text-sm font-medium">Email <span className="text-red-500 text-md">*</span></label>
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder='Enter Email'
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-4 py-1 md:py-2 border rounded-md focus:ring focus:ring-indigo-400 text-xs md:text-sm"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder='Enter Email Id'
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-1 md:py-2 border rounded-md focus:ring focus:ring-indigo-400 text-xs md:text-sm"
+                                />
+                                <span
+                                    className="absolute right-4 top-2 cursor-pointer"
+                                >
+                                    <FontAwesomeIcon
+                                        icon={faEnvelope}
+                                        className='text-gray-500'
+                                    />
+                                </span>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-xs md:text-sm font-medium">Password <span className="text-red-500 text-md">*</span></label>
@@ -161,15 +147,17 @@ const EmployeeRegistration = () => {
                                     required
                                     className="w-full px-4 py-1 md:py-2 border rounded-md focus:ring focus:ring-indigo-400 text-xs md:text-sm"
                                 />
+
                                 <span
                                     className="absolute right-3 top-2 cursor-pointer"
                                     onClick={togglePasswordVisibility}
                                 >
                                     <FontAwesomeIcon
                                         icon={showPassword ? faEye : faEyeSlash}
-                                        className='text-gray-600'
+                                        className='text-gray-500'
                                     />
                                 </span>
+
                             </div>
                         </div>
 
@@ -194,12 +182,22 @@ const EmployeeRegistration = () => {
                         {error && <p className="text-red-500">{error}</p>}
                         {successMessage && <p className="text-green-500">{successMessage}</p>}
 
-                        <button
-                            type="submit"
-                            className="w-full py-2 px-4 text-white bg-indigo-500 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring focus:ring-indigo-400 text-xs md:text-sm"
-                        >
-                            Register & Send Details
-                        </button>
+                        <div className='relative'>
+                            <button
+                                type="submit"
+                                className="w-full font-bold py-2 px-4 text-white bg-indigo-500 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring focus:ring-indigo-400 text-xs md:text-sm"
+                            >
+                                Register & Send
+                            </button>
+                            <span
+                                className="absolute right-28 cursor-pointer text-2xl"
+                            >
+                                <FontAwesomeIcon
+                                    icon={faWhatsapp}
+                                    className='text-white'
+                                />
+                            </span>
+                        </div>
                     </form>
                 </div>
             </div>

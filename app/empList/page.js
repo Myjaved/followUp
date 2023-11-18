@@ -26,9 +26,12 @@ const EmployeeList = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
+    const calculateSerialNumber = (index) => {
+        return index + (currentPage - 1) * itemsPerPage + 1;
+    };
 
 
-    const itemsPerPage = 9; // Number of items to show per page
+    const itemsPerPage = 15; // Number of items to show per page
 
     const router = useRouter();
 
@@ -199,8 +202,8 @@ const EmployeeList = () => {
     const exportToExcel = () => {
         const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
         const fileExtension = '.xlsx';
-    
-    
+
+
         // Filter and map the data to include only the header fields
         const filteredEmployees = displayEmployees.map(employee => {
             return {
@@ -210,7 +213,7 @@ const EmployeeList = () => {
                 'Company Name': employee.adminCompanyName,
             };
         });
-    
+
         const ws = XLSX.utils.json_to_sheet([...Object.values(filteredEmployees)]);
         const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
         const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -218,24 +221,22 @@ const EmployeeList = () => {
         const fileName = 'admin_list' + fileExtension;
         saveAs(data, fileName);
     };
-    
-    
+
+
 
     return (
         <>
             <NavSideSuper />
             <div className="m-5 pl-1 md:pl-64 mt-20">
-                {/* Display error message */}
                 {error && <p className="text-red-500">{error}</p>}
 
                 {/* Display success message */}
                 {successMessage && <p className="text-green-500">{successMessage}</p>}
 
-                {/* <h2 className="text-2xl font-semibold mb-4">Admin List</h2> */}
                 <h1 className="text-xl md:text-2xl font-bold mb-4 text-orange-500 text-center md:text-left">Admin List</h1>
 
-                {/* Add Employee button */}
-                <div className="mb-2 flex justify-center md:pl-2 md:-mt-8">
+                {/* Search Bar */}
+                <div className="mb-2 flex justify-center md:pl-2 md:-mt-10">
                     <input
                         type="text"
                         placeholder="Search"
@@ -245,9 +246,10 @@ const EmployeeList = () => {
                     />
                 </div>
 
-                <div className="relative mb-7 md:mb-14">
+                {/* Add New Admin */}
+                <div className="relative mb-7 md:mb-14 ">
                     <button
-                        className="bg-green-500 text-white font-bold py-1 px-5 rounded-lg absolute top-2 right-1"
+                        className="bg-green-500 text-white font-bold py-1 px-5 rounded-lg absolute top-3 right-1 text-sm md:text-base"
                         onClick={handleAddClick}
                     >
                         <FontAwesomeIcon icon={faPlus} className="text-lg mr-1 font-bold" />
@@ -258,7 +260,7 @@ const EmployeeList = () => {
 
                 <div className="relative mb-7 md:mb-14">
                     <button
-                        className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-2 right-36 text-sm md:text-sm flex items-center mr-1" // Positioning
+                        className="bg-green-700 text-white font-extrabold py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:absolute -mt-2 md:-mt-12 top-2 right-36 text-sm md:text-base flex items-center mr-1" // Positioning
                         onClick={exportToExcel}
                     >
                         <FontAwesomeIcon icon={faFileExcel} className="text-lg mr-1 font-bold" />
@@ -271,7 +273,7 @@ const EmployeeList = () => {
                     <table className="min-w-full table-auto mt-1 md:mt-1 ">
                         <thead className='bg-orange-500 text-white text-sm md:text-base'>
                             <tr>
-                                {/* <th className="px-4 py-2 text-center">Sr No.</th> */}
+                                <th className="px-4 py-2 text-center">Sr No.</th>
                                 <th className="px-4 py-2 text-center">Name</th>
                                 <th className="px-4 py-2 text-center">Email</th>
                                 <th className="px-4 py-1 text-center">Phone Number</th>
@@ -279,11 +281,12 @@ const EmployeeList = () => {
                                 <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {displayEmployees.map((employee, index) => (
                                 <tr key={employee._id}>
-                                    {/* <td className="border px-4 py-2 text-center">{index + 1}</td> */}
-                                    <td className="border px-4 py-2 text-center font-semibold">{employee.name}</td>
+                                    <td className="border px-4 py-2 text-center">{calculateSerialNumber(index)}</td>
+                                    <td className="border px-4 py-2 text-left font-semibold">{employee.name}</td>
                                     <td className="border px-4 py-2">{employee.email}</td>
                                     <td className="border px-4 py-2 text-center">{employee.phoneNumber}</td>
                                     <td className="border px-4 py-2 text-center font-semibold">{employee.adminCompanyName}</td>
@@ -437,22 +440,21 @@ const EmployeeList = () => {
                                     <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                     </svg>
-                                    <h3 className="mb-5 text-lg font-normal text-gray-800 dark:text-gray-400">Delete this Admin?</h3>
-                                    {/* Modal content */}
-                                    {/* ... (content of the delete modal) */}
+                                    <h3 className="mb-5 text-lg font-normal text-gray-800 dark:text-gray-400">Delete This Admin?</h3>
+
                                     <button
                                         type="button"
                                         className="text-white text-xs md:text-sm bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg inline-flex items-center px-5 py-2.5 text-center mr-2"
                                         onClick={() => confirmDelete(employeeToDelete)} // Pass the selected employee's ID
                                     >
-                                        Yes, I&apos;m sure
+                                        Delete
                                     </button>
                                     <button
                                         type="button"
                                         className="text-gray-500 text-xs md:text-sm bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
                                         onClick={closeModal} // Close the modal when "No, cancel" is clicked
                                     >
-                                        No, Cancel
+                                        Cancel
                                     </button>
                                 </div>
                             </div>
@@ -471,7 +473,6 @@ const EmployeeList = () => {
                                     className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
                                     onClick={() => setIsViewModalOpen(false)} // Close the modal when the close button is clicked
                                 >
-                                    {/* Close button icon */}
                                 </button>
                                 <div className="p-6 text-center">
                                     <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-gray-400">Admin Details</h3>
